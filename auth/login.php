@@ -1,3 +1,30 @@
+<?php
+require_once '../auth_functions.php';
+
+redirectIfLoggedIn();
+
+$error = '';
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+  $username = trim($_POST['username']);
+  $password = $_POST['password'];
+
+  if (!empty($username) && !empty($password)) {
+    $result = login($username, $password);
+
+    if ($result['success']) {
+      $success = $result['message'];
+      header("refresh:2;url=/apotek-alifa/layouts/landing/");
+    } else {
+      $error = $result['message'];
+    }
+  } else {
+    $error = 'Username dan password harus diisi!';
+  }
+}
+?>
+
 <!doctype html>
 <html lang="en">
 
@@ -7,6 +34,7 @@
   <title>Apotek Alifa | Halaman Masuk</title>
   <link rel="shortcut icon" type="image/png" href="/apotek-alifa/assets/img/favicon.ico" />
   <link rel="stylesheet" href="/apotek-alifa/assets/css/styles.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
 </head>
 
 <body>
@@ -24,28 +52,57 @@
                   <img src="/apotek-alifa/assets/img/logo.png" alt="Logo" width="200">
                 </a>
 
-                <form>
+                <?php if (!empty($error)): ?>
+                  <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>
+                      <?= htmlspecialchars($error) ?>
+                    </div>
+                  </div>
+                <?php endif; ?>
+
+                <?php if (!empty($success)): ?>
+                  <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <?= htmlspecialchars($success) ?>
+                    <div class="mt-2">
+                      <small>Mengalihkan ke halaman utama...</small>
+                    </div>
+                  </div>
+                <?php endif; ?>
+
+                <form method="POST" action="">
                   <div class="mb-3">
-                    <label for="username" class="form-label">Nama Pengguna</label>
-                    <input type="email" class="form-control" id="username" aria-describedby="emailHelp">
+                    <label for="username" class="form-label">Username atau Email</label>
+                    <input type="text" class="form-control" id="username" name="username"
+                      value="<?= isset($_POST['username']) ? htmlspecialchars($_POST['username']) : '' ?>"
+                      required>
                   </div>
                   <div class="mb-4">
                     <label for="password" class="form-label">Sandi</label>
-                    <input type="password" class="form-control" id="password">
+                    <div class="position-relative">
+                      <input type="password" class="form-control" id="password" name="password" required>
+                      <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2"
+                        onclick="togglePassword()">
+                        <i class="bi bi-eye" id="toggleIcon"></i>
+                      </button>
+                    </div>
                   </div>
                   <div class="d-flex align-items-center justify-content-between mb-4">
                     <div class="form-check">
-                      <input class="form-check-input primary" type="checkbox" value="" id="remember">
+                      <input class="form-check-input primary" type="checkbox" value="" id="remember" name="remember">
                       <label class="form-check-label text-dark" for="remember">
                         Ingat Saya
                       </label>
                     </div>
-                    <a class="text-primary fw-bold" href="./index.html">Lupa Sandi?</a>
+                    <a class="text-primary fw-bold" href="#" onclick="alert('Fitur lupa password belum tersedia')">Lupa Password?</a>
                   </div>
-                  <a href="./index.html" class="btn btn-primary w-100 py-8 fs-4 mb-4 rounded-2">Masuk</a>
+                  <button type="submit" class="btn btn-primary w-100 py-8 fs-4 mb-4 rounded-2">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Masuk
+                  </button>
                   <div class="d-flex align-items-center justify-content-center">
-                    <p class="fs-4 mb-0 fw-bold">Baru di sini?</p>
-                    <a class="text-primary fw-bold ms-2" href="./authentication-register.html">Daftar Segera</a>
+                    <p class="fs-4 mb-0 fw-bold">Belum punya akun?</p>
+                    <a class="text-primary fw-bold ms-2" href="register.php">Daftar Sekarang</a>
                   </div>
                 </form>
 
@@ -57,11 +114,24 @@
     </div>
   </div>
 
-
   <script src="/apotek-alifa/assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="/apotek-alifa/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- solar icons -->
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const toggleIcon = document.getElementById('toggleIcon');
+
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.className = 'bi bi-eye-slash';
+      } else {
+        passwordInput.type = 'password';
+        toggleIcon.className = 'bi bi-eye';
+      }
+    }
+  </script>
 </body>
 
 </html>
