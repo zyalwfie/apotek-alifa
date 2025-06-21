@@ -1,5 +1,6 @@
 <?php
 include 'functions.php';
+require_once 'auth_functions.php';
 
 $searchQuery = isset($_GET['query']) ? trim($_GET['query']) : '';
 $currentPage = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
@@ -42,7 +43,7 @@ $totalItems = $result['total'];
 			<div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
 				<?php foreach ($products as $product): ?>
 					<div class="col mb-5">
-						<div class="card h-100">
+						<div class="card h-100 product-card">
 							<!-- Product image-->
 							<img class="card-img-top"
 								src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($product->image) ?>"
@@ -54,18 +55,30 @@ $totalItems = $result['total'];
 									<!-- Product name-->
 									<h5 class="fw-bolder"><?= htmlspecialchars($product->name) ?></h5>
 									<!-- Product price-->
-									<p class="text-muted mb-0">Rp<?= number_format($product->price, 0, '.', ',') ?></p>
+									<p class="text-primary fw-bold mb-2">Rp<?= number_format($product->price, 0, '.', ',') ?></p>
+									<?php if (!empty($product->description)): ?>
+										<p class="text-muted small"><?= htmlspecialchars(substr($product->description, 0, 50)) ?>...</p>
+									<?php endif; ?>
 								</div>
 							</div>
 							<!-- Product actions-->
 							<div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
 								<div class="text-center d-flex gap-2 align-items-center justify-content-center">
-									<a class="btn btn-dark mt-auto" href="#">
-										Lihat Detail
-									</a>
-									<a class="btn btn-outline-dark mt-auto" href="#">
-										<i class="bi bi-cart-plus"></i>
-									</a>
+									<button class="btn btn-outline-primary btn-sm" onclick="viewProduct(<?= $product->id ?>)">
+										<i class="bi bi-eye me-1"></i>Detail
+									</button>
+
+									<?php if (isLoggedIn()): ?>
+										<button class="btn btn-primary btn-sm add-to-cart-btn"
+											data-product-id="<?= $product->id ?>"
+											data-product-name="<?= htmlspecialchars($product->name) ?>">
+											<i class="bi bi-cart-plus me-1"></i>Tambah
+										</button>
+									<?php else: ?>
+										<button class="btn btn-secondary btn-sm" onclick="loginRequired()">
+											<i class="bi bi-cart-plus me-1"></i>Login
+										</button>
+									<?php endif; ?>
 								</div>
 							</div>
 						</div>
@@ -172,3 +185,171 @@ $totalItems = $result['total'];
 		<?php endif; ?>
 	</div>
 </section>
+
+<!-- Toast Container for Notifications -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+	<div id="addToCartToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+		<div class="toast-header">
+			<i class="bi bi-cart-check text-success me-2"></i>
+			<strong class="me-auto">Keranjang</strong>
+			<button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+		</div>
+		<div class="toast-body">
+			Produk berhasil ditambahkan ke keranjang!
+		</div>
+	</div>
+</div>
+
+<style>
+	.product-card {
+		transition: transform 0.3s ease, box-shadow 0.3s ease;
+	}
+
+	.product-card:hover {
+		transform: translateY(-5px);
+		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+	}
+
+	.add-to-cart-btn {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.add-to-cart-btn.loading {
+		pointer-events: none;
+	}
+
+	.add-to-cart-btn.loading::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 20px;
+		height: 20px;
+		margin: -10px 0 0 -10px;
+		border: 2px solid #ffffff;
+		border-radius: 50%;
+		border-top-color: transparent;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.toast {
+		min-width: 300px;
+	}
+</style>
+
+<script>
+	function addToCart(productId, productName) {
+		const btn = document.querySelector(`[data-product-id="${productId}"]`);
+
+		// Show loading state
+		btn.classList.add('loading');
+		btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menambah...';
+		btn.disabled = true;
+
+		fetch('/apotek-alifa/layouts/landing/add_to_cart.php', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				body: `product_id=${productId}&quantity=1`
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					// Update cart count in header
+					updateCartCount(data.cart_count);
+
+					// Show success toast
+					showToast('Produk berhasil ditambahkan ke keranjang!', 'success');
+
+					// Reset button state
+					btn.innerHTML = '<i class="bi bi-cart-check me-1"></i>Ditambah';
+					btn.classList.remove('btn-primary');
+					btn.classList.add('btn-success');
+
+					// Reset after 2 seconds
+					setTimeout(() => {
+						btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
+						btn.classList.remove('btn-success');
+						btn.classList.add('btn-primary');
+					}, 2000);
+				} else {
+					if (data.redirect) {
+						window.location.href = data.redirect;
+						return;
+					}
+					showToast(data.message, 'error');
+
+					// Reset button state
+					btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
+				}
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				showToast('Terjadi kesalahan saat menambahkan produk!', 'error');
+
+				// Reset button state
+				btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
+			})
+			.finally(() => {
+				btn.classList.remove('loading');
+				btn.disabled = false;
+			});
+	}
+
+	function updateCartCount(count) {
+		const cartBadge = document.querySelector('.badge');
+		if (cartBadge) {
+			cartBadge.textContent = count > 99 ? '99+' : count;
+			if (count > 0) {
+				cartBadge.style.display = 'inline-block';
+			}
+		}
+	}
+
+	function showToast(message, type = 'success') {
+		const toastEl = document.getElementById('addToCartToast');
+		const toastBody = toastEl.querySelector('.toast-body');
+		const toastIcon = toastEl.querySelector('.toast-header i');
+
+		toastBody.textContent = message;
+
+		if (type === 'success') {
+			toastIcon.className = 'bi bi-cart-check text-success me-2';
+		} else {
+			toastIcon.className = 'bi bi-exclamation-triangle text-danger me-2';
+		}
+
+		const toast = new bootstrap.Toast(toastEl);
+		toast.show();
+	}
+
+	function viewProduct(productId) {
+		// Implement product detail view
+		alert('Fitur detail produk akan segera hadir!');
+	}
+
+	function loginRequired() {
+		if (confirm('Anda harus login untuk menambahkan produk ke keranjang. Login sekarang?')) {
+			window.location.href = '/apotek-alifa/auth/login.php';
+		}
+	}
+
+	// Event delegation for add to cart buttons
+	document.addEventListener('click', function(e) {
+		if (e.target.closest('.add-to-cart-btn')) {
+			const btn = e.target.closest('.add-to-cart-btn');
+			const productId = btn.getAttribute('data-product-id');
+			const productName = btn.getAttribute('data-product-name');
+
+			addToCart(productId, productName);
+		}
+	});
+</script>
