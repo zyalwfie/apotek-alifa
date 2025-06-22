@@ -75,7 +75,6 @@ $products = getData('select * from products limit 4');
 
             <div class="col-lg-6 position-relative align-self-start" data-aos="fade-up" data-aos-delay="200">
                 <img src="../../assets/img/about.jpg" class="img-fluid" alt="Gambar Tentang Kami">
-                <a href="https://www.youtube.com/watch?v=Y7f98aduVJ8" class="glightbox pulsating-play-btn"></a>
             </div>
 
             <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="100">
@@ -207,47 +206,6 @@ $products = getData('select * from products limit 4');
     </div>
 
 </section><!-- /Services Section -->
-
-<!-- Products Section -->
-<section id="products" class="doctors section">
-
-    <!-- Section Title -->
-    <div class="container section-title" data-aos="fade-up">
-        <h2>Produk Kami</h2>
-        <p>Temukan produk berkualitas dengan harga terbaik dan diskon menarik! Lihat lebih banyak <a href="?page=shop" class="text-decoration-underline">di sini</a></p>
-    </div><!-- End Section Title -->
-
-    <div class="container">
-
-        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-
-            <?php foreach ($products as $product) : ?>
-                <div class="col mb-5" data-aos="fade-up" data-aos-delay="400">
-                    <div class="card h-100">
-                        <!-- Product image-->
-                        <img class="card-img-top" src="https://dummyimage.com/450x300/dee2e6/6c757d.jpg" alt="..." />
-                        <!-- Product details-->
-                        <div class="card-body p-4">
-                            <div class="text-center">
-                                <!-- Product name-->
-                                <h5 class="fw-bolder">Fancy Product</h5>
-                                <!-- Product price-->
-                                $40.00 - $80.00
-                            </div>
-                        </div>
-                        <!-- Product actions-->
-                        <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                            <div class="text-center"><a class="btn btn-outline-dark mt-auto" href="#">View options</a></div>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-
-        </div>
-
-    </div>
-
-</section><!-- /Doctors Section -->
 
 <!-- Faq Section -->
 <section id="faq" class="faq section light-background">

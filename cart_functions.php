@@ -1,7 +1,4 @@
 <?php
-// cart_functions.php
-
-// Check if auth_functions is already included
 if (!function_exists('connectDB')) {
     if (file_exists('auth_functions.php')) {
         require_once 'auth_functions.php';

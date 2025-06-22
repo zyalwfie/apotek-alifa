@@ -115,7 +115,7 @@ $cartCount = getCartCount($user_id);
     <?php if (!empty($cartItems)): ?>
         <!-- Checkout Section -->
         <div class="container">
-            <form class="row g-5" id="checkoutForm">
+            <form class="row g-5" id="checkoutForm" action="?page=payments">
                 <div class="col-md-5 order-md-last">
                     <h4 class="d-flex justify-content-between align-items-center mb-3">
                         <span class="text-primary">Ringkasan Pesanan</span>
@@ -127,7 +127,7 @@ $cartCount = getCartCount($user_id);
                             <li class="list-group-item d-flex justify-content-between lh-sm" id="summary-item-<?= $item['id'] ?>">
                                 <div>
                                     <h6 class="my-0"><?= htmlspecialchars($item['name']) ?></h6>
-                                    <small class="text-body-secondary">Qty: <?= $item['quantity'] ?></small>
+                                    <small class="text-body-secondary">Jumlah: <?= $item['quantity'] ?></small>
                                 </div>
                                 <span class="text-body-secondary">
                                     Rp<?= number_format($item['quantity'] * $item['price_at_add'], 0, '.', ',') ?>
@@ -154,14 +154,14 @@ $cartCount = getCartCount($user_id);
                                 </div>
                             </div>
                             <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>
+                                <i class="bi bi-info-circle me-1"></i>
                                 <small>Transfer sesuai total pembayaran dan upload bukti transfer pada form checkout</small>
                             </div>
                         </div>
                     </div>
 
                     <button class="w-100 btn btn-primary btn-lg mt-3" type="submit">
-                        <i class="bi bi-credit-card me-2"></i>Lanjutkan ke Pembayaran
+                        <i class="bi bi-wallet me-2"></i>Lanjutkan ke Pembayaran
                     </button>
                 </div>
 
@@ -276,7 +276,6 @@ $cartCount = getCartCount($user_id);
 </style>
 
 <script>
-    // Cart management functions
     function updateCartItem(cartId, action, quantity = null) {
         const formData = new FormData();
         formData.append('cart_id', cartId);
@@ -294,21 +293,17 @@ $cartCount = getCartCount($user_id);
             .then(data => {
                 if (data.success) {
                     if (action === 'remove') {
-                        // Remove item from DOM
                         document.getElementById(`cart-item-${cartId}`).remove();
                         document.getElementById(`summary-item-${cartId}`).remove();
 
-                        // Check if cart is empty
                         const remainingItems = document.querySelectorAll('[id^="cart-item-"]');
                         if (remainingItems.length === 0) {
-                            location.reload(); // Reload to show empty cart message
+                            location.reload();
                         }
                     } else {
-                        // Update quantities and totals
-                        location.reload(); // Simple reload for now
+                        location.reload();
                     }
 
-                    // Update cart count in header
                     updateHeaderCartCount(data.cart_count);
 
                     showToast(data.message, 'success');
@@ -323,7 +318,6 @@ $cartCount = getCartCount($user_id);
     }
 
     function updateHeaderCartCount(count) {
-        // Update cart badge in header
         const cartBadges = document.querySelectorAll('.badge');
         cartBadges.forEach(badge => {
             if (badge.closest('[href*="cart"]')) {
@@ -332,7 +326,6 @@ $cartCount = getCartCount($user_id);
             }
         });
 
-        // Update local cart count
         const localCartCount = document.getElementById('cart-count');
         if (localCartCount) {
             localCartCount.textContent = count;
@@ -356,9 +349,7 @@ $cartCount = getCartCount($user_id);
         toast.show();
     }
 
-    // Event listeners
     document.addEventListener('click', function(e) {
-        // Quantity buttons
         if (e.target.closest('.quantity-btn')) {
             const btn = e.target.closest('.quantity-btn');
             const cartId = btn.getAttribute('data-cart-id');
@@ -367,7 +358,6 @@ $cartCount = getCartCount($user_id);
             updateCartItem(cartId, action);
         }
 
-        // Remove buttons
         if (e.target.closest('.remove-btn')) {
             const btn = e.target.closest('.remove-btn');
             const cartId = btn.getAttribute('data-cart-id');
@@ -379,11 +369,9 @@ $cartCount = getCartCount($user_id);
         }
     });
 
-    // Form validation and submission
     document.getElementById('checkoutForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Basic form validation
         const requiredFields = ['recipient_name', 'email', 'address', 'recipient_phone'];
         let isValid = true;
 
@@ -398,7 +386,6 @@ $cartCount = getCartCount($user_id);
             }
         });
 
-        // Email validation
         const email = document.getElementById('email');
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (email.value && !emailRegex.test(email.value)) {
@@ -406,7 +393,6 @@ $cartCount = getCartCount($user_id);
             isValid = false;
         }
 
-        // Phone validation
         const phone = document.getElementById('recipient_phone');
         const phoneRegex = /^[0-9+\-\s()]+$/;
         if (phone.value && !phoneRegex.test(phone.value)) {
@@ -415,15 +401,12 @@ $cartCount = getCartCount($user_id);
         }
 
         if (isValid) {
-            // Process checkout
             alert('Fitur checkout akan segera tersedia!');
-            // Here you would typically submit to a checkout processing script
         } else {
             showToast('Mohon lengkapi semua field yang diperlukan!', 'error');
         }
     });
 
-    // Real-time validation
     document.querySelectorAll('input, textarea').forEach(field => {
         field.addEventListener('blur', function() {
             if (this.hasAttribute('required') && !this.value.trim()) {

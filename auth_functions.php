@@ -163,26 +163,6 @@ function getUserData()
     return null;
 }
 
-// function getCartCount()
-// {
-//     if (!isLoggedIn()) {
-//         return 0;
-//     }
-
-//     $conn = connectDB();
-//     $query = "SELECT SUM(quantity) as total FROM carts WHERE user_id = ?";
-//     $stmt = $conn->prepare($query);
-//     $stmt->bind_param("i", $_SESSION['user_id']);
-//     $stmt->execute();
-//     $result = $stmt->get_result();
-//     $count = $result->fetch_assoc()['total'] ?? 0;
-
-//     $stmt->close();
-//     $conn->close();
-
-//     return $count;
-// }
-
 function validateUsername($username)
 {
     // Username hanya boleh mengandung huruf, angka, underscore, dan hyphen
