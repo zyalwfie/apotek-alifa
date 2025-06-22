@@ -81,7 +81,7 @@ $user = getUserData();
             <?php endif; ?>
 
             <li class="sidebar-item">
-                <a class="sidebar-link justify-content-between <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'order.index' ? 'active' : '' ?> <?php endif; ?>"
+                <a class="sidebar-link justify-content-between <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'order.index' || $_GET['page'] === 'order.show' ? 'active' : '' ?> <?php endif; ?>"
                     href="/apotek-alifa/layouts/dashboard?page=order.index" aria-expanded="false">
                     <div class="d-flex align-items-center gap-3">
                         <span class="d-flex">
@@ -101,7 +101,7 @@ $user = getUserData();
                 <span class="hide-menu">Pengaturan</span>
             </li>
             <li class="sidebar-item">
-                <a class="sidebar-link justify-content-between" href="<?= $user['role'] === 'admin' ? '/apotek-alifa/dashboard/admin?page=profile.index' : '/apotek-alifa/dashboard/user?page=profile.index'  ?>" aria-expanded="false">
+                <a class="sidebar-link <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'profile.index' ? 'active' : '' ?> <?php endif; ?> justify-content-between" href="/apotek-alifa/layouts/dashboard?page=profile.index" aria-expanded="false">
                     <div class="d-flex align-items-center gap-3">
                         <span class="d-flex">
                             <i class="ti ti-user"></i>
@@ -112,8 +112,8 @@ $user = getUserData();
                 </a>
             </li>
             <li class="sidebar-item">
-                <a class="sidebar-link justify-content-between"
-                    href="<?= $user['role'] === 'admin' ? '/apotek-alifa/dashboard/admin?page=profile.edit' : '/apotek-alifa/dashboard/user?page=profile.edit'  ?>"
+                <a class="sidebar-link justify-content-between <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'profile.edit' ? 'active' : '' ?> <?php endif; ?>"
+                    href="/apotek-alifa/layouts/dashboard?page=profile.edit"
                     aria-expanded="false">
                     <div class="d-flex align-items-center gap-3">
                         <span class="d-flex">

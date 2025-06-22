@@ -15,7 +15,6 @@ function login($username, $password)
 {
     $conn = connectDB();
 
-    // Query untuk mencari user berdasarkan username atau email
     $query = "SELECT * FROM users WHERE username = ? OR email = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("ss", $username, $username);
@@ -25,9 +24,7 @@ function login($username, $password)
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
 
-        // Verifikasi password
         if (password_verify($password, $user['password'])) {
-            // Set session
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['full_name'] = $user['full_name'];
