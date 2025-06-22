@@ -8,15 +8,13 @@ $user_id = $_SESSION['user_id'];
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $status = isset($_GET['status']) ? trim($_GET['status']) : '';
 $currentPage = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
-$itemsPerPage = 5; // Ubah ke 5 untuk testing pagination
+$itemsPerPage = 5;
 
 $result = getUserOrdersWithPagination($user_id, $search, $status, $currentPage, $itemsPerPage);
 $orders = $result['orders'];
 $totalPages = $result['total_pages'];
 $totalItems = $result['total'];
 
-// Debug info - hapus setelah testing
-error_log("Debug Pagination: Total Items: $totalItems, Total Pages: $totalPages, Current Page: $currentPage, Orders Count: " . count($orders));
 ?>
 
 <div class="row">

@@ -94,10 +94,9 @@ function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page
 function getOrderStatusBadge($status)
 {
     $statuses = [
-        'tertunda' => ['text' => 'Menunggu Pembayaran', 'class' => 'warning', 'icon' => 'clock'],
-        'berhasil' => ['text' => 'Sedang Diproses', 'class' => 'info', 'icon' => 'gear'],
+        'tertunda' => ['text' => 'Tertunda', 'class' => 'warning', 'icon' => 'clock'],
+        'berhasil' => ['text' => 'Berhasil', 'class' => 'success', 'icon' => 'check'],
         'gagal' => ['text' => 'Dibatalkan', 'class' => 'danger', 'icon' => 'x-circle'],
-        'selesai' => ['text' => 'Selesai', 'class' => 'success', 'icon' => 'check-circle']
     ];
 
     return $statuses[$status] ?? ['text' => 'Unknown', 'class' => 'secondary', 'icon' => 'question'];
