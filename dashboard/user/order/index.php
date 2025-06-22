@@ -8,12 +8,15 @@ $user_id = $_SESSION['user_id'];
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $status = isset($_GET['status']) ? trim($_GET['status']) : '';
 $currentPage = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
-$itemsPerPage = 10;
+$itemsPerPage = 5; // Ubah ke 5 untuk testing pagination
 
 $result = getUserOrdersWithPagination($user_id, $search, $status, $currentPage, $itemsPerPage);
 $orders = $result['orders'];
 $totalPages = $result['total_pages'];
 $totalItems = $result['total'];
+
+// Debug info - hapus setelah testing
+error_log("Debug Pagination: Total Items: $totalItems, Total Pages: $totalPages, Current Page: $currentPage, Orders Count: " . count($orders));
 ?>
 
 <div class="row">
@@ -105,12 +108,15 @@ $totalItems = $result['total'];
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php $i = 1; ?>
+                                <?php
+                                // Calculate correct row number based on pagination
+                                $rowNumber = ($currentPage - 1) * $itemsPerPage + 1;
+                                ?>
                                 <?php foreach ($orders as $order): ?>
                                     <tr>
                                         <td class="px-0">
                                             <div>
-                                                <h6><?= $i++ ?></h6>
+                                                <h6><?= $rowNumber++ ?></h6>
                                             </div>
                                         </td>
 
@@ -120,6 +126,10 @@ $totalItems = $result['total'];
                                                 <small class="text-muted">
                                                     <i class="ti ti-mail me-1"></i>
                                                     <?= htmlspecialchars($order['recipient_email']) ?>
+                                                </small>
+                                                <br>
+                                                <small class="text-muted">
+                                                    Order ID: #<?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?>
                                                 </small>
                                             </div>
                                         </td>
@@ -133,120 +143,131 @@ $totalItems = $result['total'];
                                                     <i class="ti ti-package me-1"></i>
                                                     <?= $order['item_count'] ?> item
                                                 </small>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <?= date('d M Y', strtotime($order['created_at'])) ?>
+                                                </small>
                                             </div>
                                         </td>
 
                                         <td class="px-0">
                                             <?php if (!empty($order['proof_of_payment'])): ?>
-                                                <small class="badge bg-success mt-1">
+                                                <span class="badge bg-success">
                                                     <i class="ti ti-check me-1"></i>Berhasil
-                                                </small>
+                                                </span>
                                             <?php elseif ($order['status'] === 'tertunda'): ?>
-                                                <small class="badge bg-warning mt-1">
+                                                <span class="badge bg-warning">
                                                     <i class="ti ti-clock me-1"></i>Tertunda
-                                                </small>
+                                                </span>
+                                            <?php elseif ($order['status'] === 'gagal'): ?>
+                                                <span class="badge bg-danger">
+                                                    <i class="ti ti-x me-1"></i>Gagal
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-info">
+                                                    <i class="ti ti-info me-1"></i><?= ucfirst($order['status']) ?>
+                                                </span>
                                             <?php endif; ?>
                                         </td>
 
                                         <td class="px-0 text-end">
-                                            <a href="/apotek-alifa/layouts/dashboard?page=order.show&order_id=<?= $order['id'] ?>" class="btn">Lihat</a>
+                                            <a href="/apotek-alifa/layouts/dashboard?page=order.show&order_id=<?= $order['id'] ?>"
+                                                class="btn btn-sm btn-outline-primary">
+                                                <i class="ti ti-eye me-1"></i>Lihat
+                                            </a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
 
-                        <!-- Pagination -->
+                        <!-- PAGINATION - Always show if totalPages > 1 -->
                         <?php if ($totalPages > 1): ?>
-                            <nav aria-label="Order pagination" class="mt-4">
-                                <ul class="pagination justify-content-center">
-                                    <!-- Previous Page -->
-                                    <?php if ($currentPage > 1): ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="<?= buildOrderPaginationUrl($currentPage - 1, $search, $status) ?>">
-                                                <i class="ti ti-chevron-left"></i>
-                                            </a>
-                                        </li>
-                                    <?php else: ?>
-                                        <li class="page-item disabled">
-                                            <span class="page-link"><i class="ti ti-chevron-left"></i></span>
-                                        </li>
-                                    <?php endif; ?>
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <div>
+                                    <small class="text-muted">
+                                        Menampilkan <?= count($orders) ?> dari <?= $totalItems ?> pesanan
+                                    </small>
+                                </div>
 
-                                    <!-- Page Numbers -->
-                                    <?php
-                                    $startPage = max(1, $currentPage - 2);
-                                    $endPage = min($totalPages, $currentPage + 2);
-
-                                    if ($startPage > 1):
-                                    ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="<?= buildOrderPaginationUrl(1, $search, $status) ?>">1</a>
-                                        </li>
-                                        <?php if ($startPage > 2): ?>
+                                <nav aria-label="Order pagination">
+                                    <ul class="pagination pagination-sm mb-0">
+                                        <!-- Previous Page -->
+                                        <?php if ($currentPage > 1): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl($currentPage - 1, $search, $status) ?>">
+                                                    <i class="ti ti-chevron-left"></i>
+                                                </a>
+                                            </li>
+                                        <?php else: ?>
                                             <li class="page-item disabled">
-                                                <span class="page-link">...</span>
+                                                <span class="page-link"><i class="ti ti-chevron-left"></i></span>
                                             </li>
                                         <?php endif; ?>
-                                    <?php endif; ?>
 
-                                    <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
-                                        <li class="page-item <?= $i == $currentPage ? 'active' : '' ?>">
-                                            <a class="page-link" href="<?= buildOrderPaginationUrl($i, $search, $status) ?>"><?= $i ?></a>
-                                        </li>
-                                    <?php endfor; ?>
+                                        <!-- Page Numbers -->
+                                        <?php
+                                        $startPage = max(1, $currentPage - 2);
+                                        $endPage = min($totalPages, $currentPage + 2);
 
-                                    <?php if ($endPage < $totalPages): ?>
-                                        <?php if ($endPage < $totalPages - 1): ?>
-                                            <li class="page-item disabled">
-                                                <span class="page-link">...</span>
+                                        // Always show first page if we're not close to it
+                                        if ($startPage > 1):
+                                        ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl(1, $search, $status) ?>">1</a>
+                                            </li>
+                                            <?php if ($startPage > 2): ?>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+
+                                        <!-- Current range of pages -->
+                                        <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                            <li class="page-item <?= $i == $currentPage ? 'active' : '' ?>">
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl($i, $search, $status) ?>"><?= $i ?></a>
+                                            </li>
+                                        <?php endfor; ?>
+
+                                        <!-- Always show last page if we're not close to it -->
+                                        <?php if ($endPage < $totalPages): ?>
+                                            <?php if ($endPage < $totalPages - 1): ?>
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            <?php endif; ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl($totalPages, $search, $status) ?>"><?= $totalPages ?></a>
                                             </li>
                                         <?php endif; ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="<?= buildOrderPaginationUrl($totalPages, $search, $status) ?>"><?= $totalPages ?></a>
-                                        </li>
-                                    <?php endif; ?>
 
-                                    <!-- Next Page -->
-                                    <?php if ($currentPage < $totalPages): ?>
-                                        <li class="page-item">
-                                            <a class="page-link" href="<?= buildOrderPaginationUrl($currentPage + 1, $search, $status) ?>">
-                                                <i class="ti ti-chevron-right"></i>
-                                            </a>
-                                        </li>
-                                    <?php else: ?>
-                                        <li class="page-item disabled">
-                                            <span class="page-link"><i class="ti ti-chevron-right"></i></span>
-                                        </li>
-                                    <?php endif; ?>
-                                </ul>
-                            </nav>
-
-                            <!-- Pagination Info -->
+                                        <!-- Next Page -->
+                                        <?php if ($currentPage < $totalPages): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl($currentPage + 1, $search, $status) ?>">
+                                                    <i class="ti ti-chevron-right"></i>
+                                                </a>
+                                            </li>
+                                        <?php else: ?>
+                                            <li class="page-item disabled">
+                                                <span class="page-link"><i class="ti ti-chevron-right"></i></span>
+                                            </li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </nav>
+                            </div>
+                        <?php else: ?>
+                            <!-- Single page info -->
                             <div class="text-center mt-3">
                                 <small class="text-muted">
-                                    Halaman <?= $currentPage ?> dari <?= $totalPages ?>
-                                    (<?= $totalItems ?> total pesanan)
+                                    Menampilkan semua <?= $totalItems ?> pesanan
                                 </small>
                             </div>
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Toast Container -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
-    <div id="orderToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <i class="ti ti-shopping-cart text-primary me-2"></i>
-            <strong class="me-auto">Order</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-        </div>
-        <div class="toast-body">
-            <!-- Toast message will be inserted here -->
         </div>
     </div>
 </div>
@@ -261,12 +282,13 @@ $totalItems = $result['total'];
         padding: 1rem 0;
     }
 
-    .dropdown-toggle::after {
-        margin-left: 0.5em;
-    }
-
     .pagination .page-link {
         padding: 0.5rem 0.75rem;
+    }
+
+    .pagination-sm .page-link {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
     }
 
     .alert {
@@ -295,35 +317,17 @@ $totalItems = $result['total'];
         .form-select {
             min-width: auto !important;
         }
+
+        .d-flex.justify-content-between {
+            flex-direction: column;
+            gap: 1rem;
+        }
     }
 </style>
 
 <script>
-    function reorderItems(orderId) {
-        if (confirm('Tambahkan semua item dari pesanan ini ke keranjang?')) {
-            showToast('Fitur pesan ulang akan segera tersedia!', 'info');
-        }
-    }
-
     function showToast(message, type = 'info') {
-        const toastEl = document.getElementById('orderToast');
-        const toastBody = toastEl.querySelector('.toast-body');
-        const toastIcon = toastEl.querySelector('.toast-header i');
-
-        toastBody.textContent = message;
-
-        const iconMap = {
-            'success': 'ti ti-check text-success',
-            'error': 'ti ti-x text-danger',
-            'warning': 'ti ti-alert-triangle text-warning',
-            'info': 'ti ti-info-circle text-info'
-        };
-
-        toastIcon.className = iconMap[type] || 'ti ti-info-circle text-primary';
-        toastIcon.classList.add('me-2');
-
-        const toast = new bootstrap.Toast(toastEl);
-        toast.show();
+        console.log(`Toast: ${message} (${type})`);
     }
 
     document.querySelector('input[name="search"]').addEventListener('keypress', function(e) {

@@ -1,7 +1,7 @@
 <?php
 require_once 'auth_functions.php';
 
-function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page = 1, $limit = 10)
+function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page = 1, $limit = 5)
 {
     $conn = connectDB();
 
