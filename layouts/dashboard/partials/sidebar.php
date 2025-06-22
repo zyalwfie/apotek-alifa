@@ -82,7 +82,7 @@ $user = getUserData();
 
             <li class="sidebar-item">
                 <a class="sidebar-link justify-content-between"
-                    href="<?= $user['role'] === 'admin' ? '/apotek-alifa/dashboard/admin?page=order.index' : '/apotek-alifa/dashboard/user?page=order.index'  ?>" aria-expanded="false">
+                    href="<?= $user['role'] === 'admin' ? '/apotek-alifa/layouts/dashboard/admin?page=order.index' : '/apotek-alifa/layouts/dashboard/user?page=order.index'?>" aria-expanded="false">
                     <div class="d-flex align-items-center gap-3">
                         <span class="d-flex">
                             <i class="ti ti-shopping-cart"></i>

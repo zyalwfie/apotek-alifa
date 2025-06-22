@@ -8,9 +8,9 @@ if (isset($_GET['page'])) {
     if (count($arrayUrl) > 1) {
         if (file_exists("../../dashboard/admin/$arrayUrl[0]/$arrayUrl[1].php") || file_exists("../../dashboard/user/$arrayUrl[0]/$arrayUrl[1].php")) {
             if ($user['role'] === 'admin') {
-                include "../../dashboard/admin/$arrayUrl[0]/$arrayUrl[1]";
+                include "../../dashboard/admin/$arrayUrl[0]/$arrayUrl[1].php";
             } else {
-                include "../../dashboard/user/$arrayUrl[0]/$arrayUrl[1]";
+                include "../../dashboard/user/$arrayUrl[0]/$arrayUrl[1].php";
             }
         } else {
             include('../../dashboard/not_found.php');
