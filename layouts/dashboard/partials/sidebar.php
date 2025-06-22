@@ -81,8 +81,8 @@ $user = getUserData();
             <?php endif; ?>
 
             <li class="sidebar-item">
-                <a class="sidebar-link justify-content-between"
-                    href="<?= $user['role'] === 'admin' ? '/apotek-alifa/layouts/dashboard/admin?page=order.index' : '/apotek-alifa/layouts/dashboard/user?page=order.index'?>" aria-expanded="false">
+                <a class="sidebar-link justify-content-between <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'order.index' ? 'active' : '' ?> <?php endif; ?>"
+                    href="/apotek-alifa/layouts/dashboard?page=order.index" aria-expanded="false">
                     <div class="d-flex align-items-center gap-3">
                         <span class="d-flex">
                             <i class="ti ti-shopping-cart"></i>

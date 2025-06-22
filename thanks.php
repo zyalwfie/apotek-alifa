@@ -30,7 +30,7 @@ if ($order_id > 0) {
                     <!-- Order Details Card -->
                     <div class="card shadow-lg mb-4">
                         <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
+                            <h5 class="mb-0 text-white">
                                 <i class="bi bi-receipt me-2"></i>Detail Pesanan
                             </h5>
                         </div>
@@ -82,7 +82,7 @@ if ($order_id > 0) {
                 <!-- Next Steps -->
                 <div class="card border-info mb-4">
                     <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">
+                        <h5 class="mb-0 text-white">
                             <i class="bi bi-info-circle me-2"></i>Langkah Selanjutnya
                         </h5>
                     </div>

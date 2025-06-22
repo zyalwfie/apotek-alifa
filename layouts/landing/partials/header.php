@@ -54,7 +54,7 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
-                                <a class="dropdown-item" href="?page=profile">
+                                <a class="dropdown-item" href="/apotek-alifa/layouts/dashboard/">
                                     <i class="bi bi-person me-2"></i>Profil Saya
                                 </a>
                             </li>

@@ -320,7 +320,7 @@ $totalItems = $result['total'];
 		btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Loading...';
 		btn.disabled = true;
 
-		fetch('add_to_cart.php', {
+		fetch('/apotek-alifa/add_to_cart.php', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
