@@ -1,5 +1,6 @@
 <?php
 require_once '../../auth_functions.php';
+require_once '../../cart_functions.php';
 $user = getUserData();
 $cartCount = isLoggedIn() ? getCartCount() : 0;
 ?>
@@ -7,7 +8,7 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
 <header id="header" class="header sticky-top">
     <div class="branding d-flex align-items-center">
         <div class="container position-relative d-flex align-items-center justify-content-between">
-            <a href="index.php" class="logo d-flex align-items-center me-auto">
+            <a href="/apotek-alifa/layouts/landing/" class="logo d-flex align-items-center">
                 <img src="../../assets/img/logo.png" alt="Apotek Alifa Logo" width="150">
             </a>
 

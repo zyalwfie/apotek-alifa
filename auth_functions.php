@@ -99,8 +99,10 @@ function register($full_name, $username, $email, $password, $confirm_password)
         }
     }
 
+    // Hash password
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
+    // Insert user baru dengan avatar default
     $insertQuery = "INSERT INTO users (full_name, username, email, password, avatar, role, created_at) VALUES (?, ?, ?, ?, 'default.png', 'user', NOW())";
     $insertStmt = $conn->prepare($insertQuery);
     $insertStmt->bind_param("ssss", $full_name, $username, $email, $hashedPassword);
@@ -161,32 +163,34 @@ function getUserData()
     return null;
 }
 
-function getCartCount()
-{
-    if (!isLoggedIn()) {
-        return 0;
-    }
+// function getCartCount()
+// {
+//     if (!isLoggedIn()) {
+//         return 0;
+//     }
 
-    $conn = connectDB();
-    $query = "SELECT COUNT(*) as total FROM carts WHERE user_id = ?";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $_SESSION['user_id']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $count = $result->fetch_assoc()['total'];
+//     $conn = connectDB();
+//     $query = "SELECT SUM(quantity) as total FROM carts WHERE user_id = ?";
+//     $stmt = $conn->prepare($query);
+//     $stmt->bind_param("i", $_SESSION['user_id']);
+//     $stmt->execute();
+//     $result = $stmt->get_result();
+//     $count = $result->fetch_assoc()['total'] ?? 0;
 
-    $stmt->close();
-    $conn->close();
+//     $stmt->close();
+//     $conn->close();
 
-    return $count;
-}
+//     return $count;
+// }
 
 function validateUsername($username)
 {
+    // Username hanya boleh mengandung huruf, angka, underscore, dan hyphen
     return preg_match('/^[a-zA-Z0-9_-]+$/', $username);
 }
 
 function validateFullName($full_name)
 {
+    // Nama lengkap hanya boleh mengandung huruf dan spasi
     return preg_match('/^[a-zA-Z\s]+$/', $full_name);
 }

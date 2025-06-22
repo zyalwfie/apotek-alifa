@@ -253,47 +253,75 @@ $totalItems = $result['total'];
 		btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menambah...';
 		btn.disabled = true;
 
-		fetch('/apotek-alifa/layouts/landing/add_to_cart.php', {
+		fetch('/apotek-alifa/add_to_cart.php', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
 				},
 				body: `product_id=${productId}&quantity=1`
 			})
-			.then(response => response.json())
-			.then(data => {
-				if (data.success) {
-					// Update cart count in header
-					updateCartCount(data.cart_count);
+			.then(response => {
+				console.log('Response status:', response.status);
+				console.log('Response headers:', response.headers);
 
-					// Show success toast
-					showToast('Produk berhasil ditambahkan ke keranjang!', 'success');
+				// Check if response is ok
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
 
-					// Reset button state
-					btn.innerHTML = '<i class="bi bi-cart-check me-1"></i>Ditambah';
-					btn.classList.remove('btn-primary');
-					btn.classList.add('btn-success');
+				// Get response text first to check if it's valid JSON
+				return response.text();
+			})
+			.then(text => {
+				console.log('Raw response:', text);
 
-					// Reset after 2 seconds
-					setTimeout(() => {
+				// Try to parse JSON
+				try {
+					const data = JSON.parse(text);
+					console.log('Parsed data:', data);
+
+					if (data.success) {
+						// Update cart count in header if provided
+						if (data.cart_count !== undefined) {
+							updateCartCount(data.cart_count);
+						}
+
+						// Show success toast
+						showToast(data.message || 'Produk berhasil ditambahkan ke keranjang!', 'success');
+
+						// Reset button state
+						btn.innerHTML = '<i class="bi bi-cart-check me-1"></i>Ditambah';
+						btn.classList.remove('btn-primary');
+						btn.classList.add('btn-success');
+
+						// Reset after 2 seconds
+						setTimeout(() => {
+							btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
+							btn.classList.remove('btn-success');
+							btn.classList.add('btn-primary');
+						}, 2000);
+					} else {
+						if (data.redirect) {
+							window.location.href = data.redirect;
+							return;
+						}
+						showToast(data.message || 'Terjadi kesalahan', 'error');
+
+						// Reset button state
 						btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
-						btn.classList.remove('btn-success');
-						btn.classList.add('btn-primary');
-					}, 2000);
-				} else {
-					if (data.redirect) {
-						window.location.href = data.redirect;
-						return;
 					}
-					showToast(data.message, 'error');
+				} catch (parseError) {
+					console.error('JSON parse error:', parseError);
+					console.error('Response text:', text);
+					showToast('Server response error. Check console for details.', 'error');
 
 					// Reset button state
 					btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
 				}
 			})
 			.catch(error => {
-				console.error('Error:', error);
-				showToast('Terjadi kesalahan saat menambahkan produk!', 'error');
+				console.error('Fetch error:', error);
+				showToast('Network error: ' + error.message, 'error');
 
 				// Reset button state
 				btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
@@ -305,13 +333,13 @@ $totalItems = $result['total'];
 	}
 
 	function updateCartCount(count) {
-		const cartBadge = document.querySelector('.badge');
-		if (cartBadge) {
-			cartBadge.textContent = count > 99 ? '99+' : count;
-			if (count > 0) {
-				cartBadge.style.display = 'inline-block';
+		const cartBadges = document.querySelectorAll('.badge');
+		cartBadges.forEach(badge => {
+			if (badge.closest('[href*="cart"]')) {
+				badge.textContent = count > 99 ? '99+' : count;
+				badge.style.display = count > 0 ? 'inline-block' : 'none';
 			}
-		}
+		});
 	}
 
 	function showToast(message, type = 'success') {

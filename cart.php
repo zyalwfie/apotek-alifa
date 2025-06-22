@@ -286,7 +286,7 @@ $cartCount = getCartCount($user_id);
             formData.append('quantity', quantity);
         }
 
-        fetch('/apotek-alifa/layouts/landing/cart_update.php', {
+        fetch('/apotek-alifa/cart_update.php', {
                 method: 'POST',
                 body: formData
             })
