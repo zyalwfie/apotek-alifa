@@ -326,9 +326,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
                 scalable: true,
                 transition: true,
                 fullscreen: true,
-                viewed() {
-                    viewer.zoomTo(1);
-                }
+                viewed() {}
             });
         }
     });
@@ -340,7 +338,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
 
         if (!file) return;
 
-        // Check file size (5MB limit)
         if (file.size > 5 * 1024 * 1024) {
             previewContainer.innerHTML = '<div class="alert alert-danger">File terlalu besar. Maksimal 5MB.</div>';
             event.target.value = '';

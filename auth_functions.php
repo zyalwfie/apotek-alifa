@@ -145,19 +145,36 @@ function redirectIfLoggedIn()
     }
 }
 
-function getUserData()
+function getUserData($user_id = null)
 {
-    if (isLoggedIn()) {
-        return [
-            'id' => $_SESSION['user_id'],
-            'username' => $_SESSION['username'],
-            'full_name' => $_SESSION['full_name'],
-            'email' => $_SESSION['email'],
-            'avatar' => $_SESSION['avatar'],
-            'role' => $_SESSION['role']
-        ];
+    $conn = connectDB();
+
+    if ($user_id === null && isset($_SESSION['user_id'])) {
+        $user_id = $_SESSION['user_id'];
     }
-    return null;
+
+    if (!$user_id) {
+        return null;
+    }
+
+    $query = "SELECT id, username, email, full_name, avatar, role, created_at
+              FROM users 
+              WHERE id = ?";
+
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $user = null;
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+    }
+
+    $stmt->close();
+    $conn->close();
+
+    return $user;
 }
 
 function validateUsername($username)

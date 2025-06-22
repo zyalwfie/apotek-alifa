@@ -1,3 +1,7 @@
+<?php
+$user = getUserData();
+?>
+
 <!--  Header Start -->
 <header class="app-header">
     <nav class="navbar navbar-expand-lg navbar-light">
@@ -14,7 +18,7 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link " href="javascript:void(0)" id="drop2" data-bs-toggle="dropdown"
                         aria-expanded="false">
-                        <img src="/apotek-alifa/assets/img/profile/user-1.svg" alt="" width="35" height="35" class="rounded-circle">
+                        <img src="/apotek-alifa/assets/img/profile/<?= $user['avatar'] ?>" alt="<?= $user['username'] ?>" width="35" height="35" class="rounded-circle">
                     </a>
                     <div class="dropdown-menu dropdown-menu-end dropdown-menu-animate-up" aria-labelledby="drop2">
                         <div class="message-body">

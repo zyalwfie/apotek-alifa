@@ -26,7 +26,7 @@ $user = getUserData();
                 </a>
             </li>
             <li class="sidebar-item">
-                <a class="sidebar-link <?= !isset($_GET['page']) ? 'active' : '' ?>" href="<?= $user['role'] === 'admin' ? '/apotek-alifa/layouts/dashboard/admin/' : '/apotek-alifa/layouts/dashboard/user/' ?>" aria-expanded="false">
+                <a class="sidebar-link <?= !isset($_GET['page']) ? 'active' : '' ?>" href="<?= $user['role'] === 'admin' ? '/apotek-alifa/layouts/dashboard/' : '/apotek-alifa/layouts/dashboard/' ?>" aria-expanded="false">
                     <i class="ti ti-layout"></i>
                     <span class="hide-menu">Dasbor</span>
                 </a>
