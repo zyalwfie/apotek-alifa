@@ -115,7 +115,7 @@ $cartCount = getCartCount($user_id);
     <?php if (!empty($cartItems)): ?>
         <!-- Checkout Section -->
         <div class="container">
-            <form class="row g-5" id="checkoutForm" action="?page=payments">
+            <form class="row g-5" id="checkoutForm">
                 <div class="col-md-5 order-md-last">
                     <h4 class="d-flex justify-content-between align-items-center mb-3">
                         <span class="text-primary">Ringkasan Pesanan</span>
@@ -127,7 +127,7 @@ $cartCount = getCartCount($user_id);
                             <li class="list-group-item d-flex justify-content-between lh-sm" id="summary-item-<?= $item['id'] ?>">
                                 <div>
                                     <h6 class="my-0"><?= htmlspecialchars($item['name']) ?></h6>
-                                    <small class="text-body-secondary">Jumlah: <?= $item['quantity'] ?></small>
+                                    <small class="text-body-secondary">Qty: <?= $item['quantity'] ?></small>
                                 </div>
                                 <span class="text-body-secondary">
                                     Rp<?= number_format($item['quantity'] * $item['price_at_add'], 0, '.', ',') ?>
@@ -154,14 +154,14 @@ $cartCount = getCartCount($user_id);
                                 </div>
                             </div>
                             <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-1"></i>
-                                <small>Transfer sesuai total pembayaran dan upload bukti transfer pada form checkout</small>
+                                <i class="bi bi-info-circle me-2"></i>
+                                <small>Transfer sesuai total pembayaran dan upload bukti transfer pada halaman berikutnya</small>
                             </div>
                         </div>
                     </div>
 
-                    <button class="w-100 btn btn-primary btn-lg mt-3" type="submit">
-                        <i class="bi bi-wallet me-2"></i>Lanjutkan ke Pembayaran
+                    <button class="w-100 btn btn-primary btn-lg mt-3" type="submit" id="checkoutBtn">
+                        <i class="bi bi-credit-card me-2"></i>Lanjutkan ke Pembayaran
                     </button>
                 </div>
 
@@ -181,22 +181,22 @@ $cartCount = getCartCount($user_id);
                         </div>
 
                         <div class="col-sm-12">
-                            <label for="email" class="form-label">
+                            <label for="recipient_email" class="form-label">
                                 Email <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                                <input type="email" class="form-control" id="email" name="email"
+                                <input type="email" class="form-control" id="recipient_email" name="recipient_email"
                                     value="<?= htmlspecialchars($_SESSION['email']) ?>" required>
                                 <div class="invalid-feedback">Email harus valid</div>
                             </div>
                         </div>
 
                         <div class="col-12">
-                            <label for="address" class="form-label">
+                            <label for="street_address" class="form-label">
                                 Alamat Lengkap <span class="text-danger">*</span>
                             </label>
-                            <textarea class="form-control" id="address" name="address" rows="4"
+                            <textarea class="form-control" id="street_address" name="street_address" rows="4"
                                 placeholder="Masukkan alamat lengkap untuk pengiriman" required></textarea>
                             <div class="invalid-feedback">Alamat harus diisi</div>
                         </div>
@@ -273,9 +273,32 @@ $cartCount = getCartCount($user_id);
     .list-group-item:last-child {
         border-bottom: none;
     }
+
+    #checkoutBtn.loading {
+        pointer-events: none;
+    }
+
+    #checkoutBtn.loading::after {
+        content: '';
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-left: 8px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 
 <script>
+    // Cart management functions
     function updateCartItem(cartId, action, quantity = null) {
         const formData = new FormData();
         formData.append('cart_id', cartId);
@@ -293,17 +316,21 @@ $cartCount = getCartCount($user_id);
             .then(data => {
                 if (data.success) {
                     if (action === 'remove') {
+                        // Remove item from DOM
                         document.getElementById(`cart-item-${cartId}`).remove();
                         document.getElementById(`summary-item-${cartId}`).remove();
 
+                        // Check if cart is empty
                         const remainingItems = document.querySelectorAll('[id^="cart-item-"]');
                         if (remainingItems.length === 0) {
-                            location.reload();
+                            location.reload(); // Reload to show empty cart message
                         }
                     } else {
-                        location.reload();
+                        // Update quantities and totals
+                        location.reload(); // Simple reload for now
                     }
 
+                    // Update cart count in header
                     updateHeaderCartCount(data.cart_count);
 
                     showToast(data.message, 'success');
@@ -318,6 +345,7 @@ $cartCount = getCartCount($user_id);
     }
 
     function updateHeaderCartCount(count) {
+        // Update cart badge in header
         const cartBadges = document.querySelectorAll('.badge');
         cartBadges.forEach(badge => {
             if (badge.closest('[href*="cart"]')) {
@@ -326,6 +354,7 @@ $cartCount = getCartCount($user_id);
             }
         });
 
+        // Update local cart count
         const localCartCount = document.getElementById('cart-count');
         if (localCartCount) {
             localCartCount.textContent = count;
@@ -349,7 +378,9 @@ $cartCount = getCartCount($user_id);
         toast.show();
     }
 
+    // Event listeners
     document.addEventListener('click', function(e) {
+        // Quantity buttons
         if (e.target.closest('.quantity-btn')) {
             const btn = e.target.closest('.quantity-btn');
             const cartId = btn.getAttribute('data-cart-id');
@@ -358,6 +389,7 @@ $cartCount = getCartCount($user_id);
             updateCartItem(cartId, action);
         }
 
+        // Remove buttons
         if (e.target.closest('.remove-btn')) {
             const btn = e.target.closest('.remove-btn');
             const cartId = btn.getAttribute('data-cart-id');
@@ -369,10 +401,12 @@ $cartCount = getCartCount($user_id);
         }
     });
 
+    // Checkout form submission
     document.getElementById('checkoutForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const requiredFields = ['recipient_name', 'email', 'address', 'recipient_phone'];
+        // Validate form
+        const requiredFields = ['recipient_name', 'recipient_email', 'street_address', 'recipient_phone'];
         let isValid = true;
 
         requiredFields.forEach(fieldName => {
@@ -386,13 +420,15 @@ $cartCount = getCartCount($user_id);
             }
         });
 
-        const email = document.getElementById('email');
+        // Email validation
+        const email = document.getElementById('recipient_email');
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (email.value && !emailRegex.test(email.value)) {
             email.classList.add('is-invalid');
             isValid = false;
         }
 
+        // Phone validation
         const phone = document.getElementById('recipient_phone');
         const phoneRegex = /^[0-9+\-\s()]+$/;
         if (phone.value && !phoneRegex.test(phone.value)) {
@@ -400,18 +436,78 @@ $cartCount = getCartCount($user_id);
             isValid = false;
         }
 
-        if (isValid) {
-            alert('Fitur checkout akan segera tersedia!');
-        } else {
+        if (!isValid) {
             showToast('Mohon lengkapi semua field yang diperlukan!', 'error');
+            return;
         }
+
+        // Show loading state
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        checkoutBtn.classList.add('loading');
+        checkoutBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Memproses Pesanan...';
+        checkoutBtn.disabled = true;
+
+        // Submit form via AJAX
+        const formData = new FormData(this);
+
+        fetch('/apotek-alifa/process_checkout.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(text => {
+                try {
+                    const data = JSON.parse(text);
+
+                    if (data.success) {
+                        showToast(data.message, 'success');
+
+                        // Redirect to payment page
+                        setTimeout(() => {
+                            window.location.href = data.redirect;
+                        }, 1500);
+                    } else {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;
+                            return;
+                        }
+                        showToast(data.message, 'error');
+                        resetCheckoutButton();
+                    }
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    console.error('Response text:', text);
+                    showToast('Server response error', 'error');
+                    resetCheckoutButton();
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                showToast('Network error: ' + error.message, 'error');
+                resetCheckoutButton();
+            });
     });
 
+    function resetCheckoutButton() {
+        const checkoutBtn = document.getElementById('checkoutBtn');
+        checkoutBtn.classList.remove('loading');
+        checkoutBtn.innerHTML = '<i class="bi bi-credit-card me-2"></i>Lanjutkan ke Pembayaran';
+        checkoutBtn.disabled = false;
+    }
+
+    // Real-time validation
     document.querySelectorAll('input, textarea').forEach(field => {
         field.addEventListener('blur', function() {
             if (this.hasAttribute('required') && !this.value.trim()) {
                 this.classList.add('is-invalid');
             } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+
+        field.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid') && this.value.trim()) {
                 this.classList.remove('is-invalid');
                 this.classList.add('is-valid');
             }

@@ -45,38 +45,81 @@ $totalItems = $result['total'];
 					<div class="col mb-5">
 						<div class="card h-100 product-card">
 							<!-- Product image-->
-							<img class="card-img-top"
-								src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($product->image) ?>"
-								alt="<?= htmlspecialchars($product->name) ?>"
-								style="height: 200px; object-fit: cover;" />
+							<div class="position-relative">
+								<img class="card-img-top"
+									src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($product->image) ?>"
+									alt="<?= htmlspecialchars($product->name) ?>"
+									style="height: 200px; object-fit: cover; cursor: pointer;"
+									onclick="window.location.href='?page=show&id=<?= $product->id ?>'" />
+
+								<!-- Stock badge -->
+								<?php if (isset($product->stock)): ?>
+									<?php if ($product->stock > 0): ?>
+										<div class="badge bg-success position-absolute" style="top: 0.5rem; right: 0.5rem">
+											<i class="bi bi-check-circle me-1"></i>Tersedia
+										</div>
+									<?php else: ?>
+										<div class="badge bg-danger position-absolute" style="top: 0.5rem; right: 0.5rem">
+											<i class="bi bi-x-circle me-1"></i>Habis
+										</div>
+									<?php endif; ?>
+								<?php endif; ?>
+							</div>
+
 							<!-- Product details-->
 							<div class="card-body p-4">
 								<div class="text-center">
 									<!-- Product name-->
-									<h5 class="fw-bolder"><?= htmlspecialchars($product->name) ?></h5>
+									<h5 class="fw-bolder mb-2">
+										<a href="?page=show&id=<?= $product->id ?>" class="text-decoration-none text-dark">
+											<?= htmlspecialchars($product->name) ?>
+										</a>
+									</h5>
+
 									<!-- Product price-->
 									<p class="text-primary fw-bold mb-2">Rp<?= number_format($product->price, 0, '.', ',') ?></p>
+
+									<!-- Product description -->
 									<?php if (!empty($product->description)): ?>
-										<p class="text-muted small"><?= htmlspecialchars(substr($product->description, 0, 50)) ?>...</p>
+										<p class="text-muted small mb-2"><?= htmlspecialchars(substr($product->description, 0, 50)) ?>...</p>
 									<?php endif; ?>
+
+									<!-- Product rating -->
+									<div class="d-flex justify-content-center align-items-center mb-2">
+										<div class="d-flex text-warning me-2" style="font-size: 0.8rem;">
+											<i class="bi bi-star-fill"></i>
+											<i class="bi bi-star-fill"></i>
+											<i class="bi bi-star-fill"></i>
+											<i class="bi bi-star-fill"></i>
+											<i class="bi bi-star"></i>
+										</div>
+										<small class="text-muted">(4.2)</small>
+									</div>
 								</div>
 							</div>
+
 							<!-- Product actions-->
 							<div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
 								<div class="text-center d-flex gap-2 align-items-center justify-content-center">
-									<button class="btn btn-outline-primary btn-sm" onclick="viewProduct(<?= $product->id ?>)">
+									<a class="btn btn-outline-primary btn-sm flex-fill" href="?page=show&id=<?= $product->id ?>">
 										<i class="bi bi-eye me-1"></i>Detail
-									</button>
+									</a>
 
 									<?php if (isLoggedIn()): ?>
-										<button class="btn btn-primary btn-sm add-to-cart-btn"
-											data-product-id="<?= $product->id ?>"
-											data-product-name="<?= htmlspecialchars($product->name) ?>">
-											<i class="bi bi-cart-plus me-1"></i>Tambah
-										</button>
+										<?php if (!isset($product->stock) || $product->stock > 0): ?>
+											<button class="btn btn-primary btn-sm flex-fill add-to-cart-btn"
+												data-product-id="<?= $product->id ?>"
+												data-product-name="<?= htmlspecialchars($product->name) ?>">
+												<i class="bi bi-cart-plus me-1"></i>Tambah
+											</button>
+										<?php else: ?>
+											<button class="btn btn-secondary btn-sm flex-fill" disabled>
+												<i class="bi bi-x-circle me-1"></i>Habis
+											</button>
+										<?php endif; ?>
 									<?php else: ?>
-										<button class="btn btn-secondary btn-sm" onclick="loginRequired()">
-											<i class="bi bi-cart-plus me-1"></i>Login
+										<button class="btn btn-outline-secondary btn-sm flex-fill" onclick="loginRequired()">
+											<i class="bi bi-box-arrow-in-right me-1"></i>Login
 										</button>
 									<?php endif; ?>
 								</div>
@@ -203,11 +246,21 @@ $totalItems = $result['total'];
 <style>
 	.product-card {
 		transition: transform 0.3s ease, box-shadow 0.3s ease;
+		border: none;
+		box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 	}
 
 	.product-card:hover {
-		transform: translateY(-5px);
-		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+		transform: translateY(-8px);
+		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+	}
+
+	.product-card .card-img-top {
+		transition: transform 0.3s ease;
+	}
+
+	.product-card:hover .card-img-top {
+		transform: scale(1.05);
 	}
 
 	.add-to-cart-btn {
@@ -224,9 +277,9 @@ $totalItems = $result['total'];
 		position: absolute;
 		top: 50%;
 		left: 50%;
-		width: 20px;
-		height: 20px;
-		margin: -10px 0 0 -10px;
+		width: 16px;
+		height: 16px;
+		margin: -8px 0 0 -8px;
 		border: 2px solid #ffffff;
 		border-radius: 50%;
 		border-top-color: transparent;
@@ -242,6 +295,20 @@ $totalItems = $result['total'];
 	.toast {
 		min-width: 300px;
 	}
+
+	.card-footer .btn {
+		font-size: 0.875rem;
+		padding: 0.5rem 0.75rem;
+	}
+
+	.badge {
+		font-size: 0.7rem;
+	}
+
+	.product-card h5 a:hover {
+		color: #0d6efd !important;
+		transition: color 0.3s ease;
+	}
 </style>
 
 <script>
@@ -250,10 +317,10 @@ $totalItems = $result['total'];
 
 		// Show loading state
 		btn.classList.add('loading');
-		btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Menambah...';
+		btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Loading...';
 		btn.disabled = true;
 
-		fetch('/apotek-alifa/add_to_cart.php', {
+		fetch('add_to_cart.php', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded',
@@ -261,27 +328,17 @@ $totalItems = $result['total'];
 				body: `product_id=${productId}&quantity=1`
 			})
 			.then(response => {
-				console.log('Response status:', response.status);
-				console.log('Response headers:', response.headers);
-
-				// Check if response is ok
 				if (!response.ok) {
 					throw new Error(`HTTP error! status: ${response.status}`);
 				}
-
-				// Get response text first to check if it's valid JSON
 				return response.text();
 			})
 			.then(text => {
-				console.log('Raw response:', text);
-
-				// Try to parse JSON
 				try {
 					const data = JSON.parse(text);
-					console.log('Parsed data:', data);
 
 					if (data.success) {
-						// Update cart count in header if provided
+						// Update cart count if provided
 						if (data.cart_count !== undefined) {
 							updateCartCount(data.cart_count);
 						}
@@ -289,8 +346,8 @@ $totalItems = $result['total'];
 						// Show success toast
 						showToast(data.message || 'Produk berhasil ditambahkan ke keranjang!', 'success');
 
-						// Reset button state
-						btn.innerHTML = '<i class="bi bi-cart-check me-1"></i>Ditambah';
+						// Success button state
+						btn.innerHTML = '<i class="bi bi-cart-check me-1"></i>Ditambah!';
 						btn.classList.remove('btn-primary');
 						btn.classList.add('btn-success');
 
@@ -306,24 +363,18 @@ $totalItems = $result['total'];
 							return;
 						}
 						showToast(data.message || 'Terjadi kesalahan', 'error');
-
-						// Reset button state
 						btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
 					}
 				} catch (parseError) {
 					console.error('JSON parse error:', parseError);
 					console.error('Response text:', text);
-					showToast('Server response error. Check console for details.', 'error');
-
-					// Reset button state
+					showToast('Server response error', 'error');
 					btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
 				}
 			})
 			.catch(error => {
 				console.error('Fetch error:', error);
 				showToast('Network error: ' + error.message, 'error');
-
-				// Reset button state
 				btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
 			})
 			.finally(() => {
@@ -357,11 +408,6 @@ $totalItems = $result['total'];
 
 		const toast = new bootstrap.Toast(toastEl);
 		toast.show();
-	}
-
-	function viewProduct(productId) {
-		// Implement product detail view
-		alert('Fitur detail produk akan segera hadir!');
 	}
 
 	function loginRequired() {

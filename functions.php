@@ -36,7 +36,7 @@ function getData($query, $params = [])
     return !empty($data) ? $data : false;
 }
 
-function getProductsWithPagination($search = '', $page = 1, $limit = 8)
+function getProductsWithPagination($search = '', $page = 1, $limit = 12)
 {
     $conn = new mysqli('localhost', 'root', '', 'apotek_alifa');
 
@@ -49,6 +49,7 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 8)
     $params = [];
     $types = '';
 
+    // Build search condition
     if (!empty($search)) {
         $searchCondition = "WHERE name LIKE ? OR description LIKE ?";
         $searchTerm = "%$search%";
@@ -56,6 +57,7 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 8)
         $types = 'ss';
     }
 
+    // Get total count for pagination
     $countQuery = "SELECT COUNT(*) as total FROM products $searchCondition";
     if (!empty($params)) {
         $countStmt = $conn->prepare($countQuery);
@@ -69,6 +71,7 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 8)
         $totalRows = $countResult->fetch_object()->total;
     }
 
+    // Get products with pagination
     $query = "SELECT * FROM products $searchCondition ORDER BY name ASC LIMIT ? OFFSET ?";
     $params[] = $limit;
     $params[] = $offset;
@@ -100,6 +103,57 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 8)
     ];
 }
 
+function getProductDetail($product_id)
+{
+    $conn = new mysqli('localhost', 'root', '', 'apotek_alifa');
+
+    if ($conn->connect_error) {
+        die("Koneksi gagal: " . $conn->connect_error);
+    }
+
+    $query = "SELECT * FROM products WHERE id = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $product_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $product = null;
+    if ($result->num_rows > 0) {
+        $product = $result->fetch_object();
+    }
+
+    $stmt->close();
+    $conn->close();
+
+    return $product;
+}
+
+function getRelatedProducts($product_id, $limit = 4)
+{
+    $conn = new mysqli('localhost', 'root', '', 'apotek_alifa');
+
+    if ($conn->connect_error) {
+        die("Koneksi gagal: " . $conn->connect_error);
+    }
+
+    // Get related products (excluding current product)
+    $query = "SELECT * FROM products WHERE id != ? ORDER BY RAND() LIMIT ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ii", $product_id, $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $products = [];
+    while ($row = $result->fetch_object()) {
+        $products[] = $row;
+    }
+
+    $stmt->close();
+    $conn->close();
+
+    return $products;
+}
+
 function buildPaginationUrl($page, $query = '')
 {
     $params = ['page' => 'shop', 'p' => $page];
@@ -107,4 +161,55 @@ function buildPaginationUrl($page, $query = '')
         $params['query'] = $query;
     }
     return '?' . http_build_query($params);
+}
+
+function formatPrice($price)
+{
+    return 'Rp' . number_format($price, 0, '.', ',');
+}
+
+function formatDate($date)
+{
+    return date('d F Y', strtotime($date));
+}
+
+function truncateText($text, $length = 100)
+{
+    if (strlen($text) <= $length) {
+        return $text;
+    }
+    return substr($text, 0, $length) . '...';
+}
+
+function generateSKU($product_id)
+{
+    return 'PRD-' . str_pad($product_id, 6, '0', STR_PAD_LEFT);
+}
+
+function calculateDiscount($original_price, $current_price)
+{
+    if ($original_price <= $current_price) {
+        return 0;
+    }
+    return round((($original_price - $current_price) / $original_price) * 100);
+}
+
+function isProductAvailable($stock)
+{
+    return isset($stock) && $stock > 0;
+}
+
+function getStockStatus($stock)
+{
+    if (!isset($stock)) {
+        return ['status' => 'unknown', 'text' => 'Stok tidak diketahui', 'class' => 'secondary'];
+    }
+
+    if ($stock <= 0) {
+        return ['status' => 'out', 'text' => 'Habis', 'class' => 'danger'];
+    } elseif ($stock <= 5) {
+        return ['status' => 'low', 'text' => 'Stok Menipis', 'class' => 'warning'];
+    } else {
+        return ['status' => 'available', 'text' => 'Tersedia', 'class' => 'success'];
+    }
 }
