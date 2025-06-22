@@ -165,12 +165,10 @@ function getUserData()
 
 function validateUsername($username)
 {
-    // Username hanya boleh mengandung huruf, angka, underscore, dan hyphen
     return preg_match('/^[a-zA-Z0-9_-]+$/', $username);
 }
 
 function validateFullName($full_name)
 {
-    // Nama lengkap hanya boleh mengandung huruf dan spasi
     return preg_match('/^[a-zA-Z\s]+$/', $full_name);
 }
