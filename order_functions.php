@@ -10,7 +10,6 @@ function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page
     $params = [$user_id];
     $types = 'i';
 
-    // Add search condition
     if (!empty($search)) {
         $conditions[] = "(o.recipient_name LIKE ? OR o.recipient_email LIKE ? OR o.id LIKE ?)";
         $searchTerm = "%$search%";
@@ -18,7 +17,6 @@ function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page
         $types .= 'sss';
     }
 
-    // Add status filter
     if (!empty($status)) {
         $conditions[] = "o.status = ?";
         $params[] = $status;
@@ -27,7 +25,6 @@ function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page
 
     $whereClause = implode(' AND ', $conditions);
 
-    // Get total count
     $countQuery = "SELECT COUNT(*) as total 
                    FROM orders o 
                    WHERE $whereClause";
@@ -39,7 +36,6 @@ function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page
     $totalRows = $countResult->fetch_object()->total;
     $countStmt->close();
 
-    // Get orders with items count and payment info
     $query = "SELECT o.id,
                      o.user_id,
                      o.status,

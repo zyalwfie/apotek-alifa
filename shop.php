@@ -2,6 +2,8 @@
 include 'functions.php';
 require_once 'auth_functions.php';
 
+$user = getUserData();
+
 $searchQuery = isset($_GET['query']) ? trim($_GET['query']) : '';
 $currentPage = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
 $itemsPerPage = 8;
@@ -106,16 +108,18 @@ $totalItems = $result['total'];
 									</a>
 
 									<?php if (isLoggedIn()): ?>
-										<?php if (!isset($product->stock) || $product->stock > 0): ?>
-											<button class="btn btn-primary btn-sm flex-fill add-to-cart-btn"
-												data-product-id="<?= $product->id ?>"
-												data-product-name="<?= htmlspecialchars($product->name) ?>">
-												<i class="bi bi-cart-plus me-1"></i>Tambah
-											</button>
-										<?php else: ?>
-											<button class="btn btn-secondary btn-sm flex-fill" disabled>
-												<i class="bi bi-x-circle me-1"></i>Habis
-											</button>
+										<?php if ($user['role'] === 'user') : ?>
+											<?php if (!isset($product->stock) || $product->stock > 0): ?>
+												<button class="btn btn-primary btn-sm flex-fill add-to-cart-btn"
+													data-product-id="<?= $product->id ?>"
+													data-product-name="<?= htmlspecialchars($product->name) ?>">
+													<i class="bi bi-cart-plus me-1"></i>Tambah
+												</button>
+											<?php else: ?>
+												<button class="btn btn-secondary btn-sm flex-fill" disabled>
+													<i class="bi bi-x-circle me-1"></i>Habis
+												</button>
+											<?php endif; ?>
 										<?php endif; ?>
 									<?php else: ?>
 										<button class="btn btn-outline-secondary btn-sm flex-fill" onclick="loginRequired()">
@@ -338,20 +342,16 @@ $totalItems = $result['total'];
 					const data = JSON.parse(text);
 
 					if (data.success) {
-						// Update cart count if provided
 						if (data.cart_count !== undefined) {
 							updateCartCount(data.cart_count);
 						}
 
-						// Show success toast
 						showToast(data.message || 'Produk berhasil ditambahkan ke keranjang!', 'success');
 
-						// Success button state
 						btn.innerHTML = '<i class="bi bi-cart-check me-1"></i>Ditambah!';
 						btn.classList.remove('btn-primary');
 						btn.classList.add('btn-success');
 
-						// Reset after 2 seconds
 						setTimeout(() => {
 							btn.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah';
 							btn.classList.remove('btn-success');
@@ -416,7 +416,6 @@ $totalItems = $result['total'];
 		}
 	}
 
-	// Event delegation for add to cart buttons
 	document.addEventListener('click', function(e) {
 		if (e.target.closest('.add-to-cart-btn')) {
 			const btn = e.target.closest('.add-to-cart-btn');

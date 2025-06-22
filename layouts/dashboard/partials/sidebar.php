@@ -31,7 +31,6 @@ $user = getUserData();
                     <span class="hide-menu">Dasbor</span>
                 </a>
             </li>
-
             <li>
                 <span class="sidebar-divider lg"></span>
             </li>
@@ -40,19 +39,6 @@ $user = getUserData();
                 <span class="hide-menu">Manajemen</span>
             </li>
             <?php if ($user['role'] === 'admin') : ?>
-                <li class="sidebar-item">
-                    <a class="sidebar-link justify-content-between"
-                        href="/apotek-alifa/layouts/dashboard/admin?page=report.index"
-                        aria-expanded="false">
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="d-flex">
-                                <i class="ti ti-report"></i>
-                            </span>
-                            <span class="hide-menu">Laporan</span>
-                        </div>
-
-                    </a>
-                </li>
                 <li class="sidebar-item">
                     <a class="sidebar-link justify-content-between"
                         href="/apotek-alifa/layouts/dashboard/admin?page=user.index"

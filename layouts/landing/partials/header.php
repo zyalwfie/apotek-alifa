@@ -25,16 +25,19 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
 
             <div class="header-actions d-flex align-items-center gap-3">
                 <?php if (isLoggedIn()): ?>
-                    <!-- Cart Button (hanya tampil jika login) -->
-                    <a href="?page=cart" class="btn btn-outline-primary position-relative">
-                        <i class="bi bi-cart"></i>
-                        <?php if ($cartCount > 0): ?>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                <?= $cartCount > 99 ? '99+' : $cartCount ?>
-                                <span class="visually-hidden">items in cart</span>
-                            </span>
-                        <?php endif; ?>
-                    </a>
+
+                    <?php if ($user['role'] === 'user') : ?>
+                        <!-- Cart Button (hanya tampil jika login) -->
+                        <a href="?page=cart" class="btn btn-outline-primary position-relative">
+                            <i class="bi bi-cart"></i>
+                            <?php if ($cartCount > 0): ?>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    <?= $cartCount > 99 ? '99+' : $cartCount ?>
+                                    <span class="visually-hidden">items in cart</span>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    <?php endif; ?>
 
                     <!-- User Dropdown -->
                     <div class="dropdown">
@@ -54,18 +57,20 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
-                                <a class="dropdown-item" href="/apotek-alifa/layouts/dashboard/">
+                                <a class="dropdown-item" href="/apotek-alifa/layouts/dashboard?page=profile.index">
                                     <i class="bi bi-person me-2"></i>Profil Saya
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" href="?page=cart">
-                                    <i class="bi bi-cart me-2"></i>Keranjang
-                                    <?php if ($cartCount > 0): ?>
-                                        <span class="badge bg-primary ms-1"><?= $cartCount ?></span>
-                                    <?php endif; ?>
-                                </a>
-                            </li>
+                            <?php if ($user['role'] === 'user') : ?>
+                                <li>
+                                    <a class="dropdown-item" href="?page=cart">
+                                        <i class="bi bi-cart me-2"></i>Keranjang
+                                        <?php if ($cartCount > 0): ?>
+                                            <span class="badge bg-primary ms-1"><?= $cartCount ?></span>
+                                        <?php endif; ?>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
                             <?php if ($user['role'] == 'admin'): ?>
                                 <li>
                                     <hr class="dropdown-divider">

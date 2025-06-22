@@ -30,7 +30,7 @@ $user = getUserData();
                                 <i class="ti ti-pencil fs-6"></i>
                                 <p class="mb-0 fs-3">Ubah Profil</p>
                             </a>
-                            <a href="/apotek-alifa/logout.php" class="btn btn-outline-primary mx-3 mt-2 d-block">Logout</a>
+                            <a href="/apotek-alifa/logout.php" class="btn btn-outline-primary mx-3 mt-2 d-block">Keluar</a>
                         </div>
                     </div>
                 </li>
