@@ -1,31 +1,46 @@
 <?php
 require_once '../../order_functions.php';
 
-requireLogin();
-
-$user_id = $_SESSION['user_id'];
+requireAdmin();
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $status = isset($_GET['status']) ? trim($_GET['status']) : '';
 $currentPage = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
-$itemsPerPage = 5;
+$itemsPerPage = 10;
 
-$result = getUserOrdersWithPagination($user_id, $search, $status, $currentPage, $itemsPerPage);
+$result = getAllOrdersWithPagination($search, $status, $currentPage, $itemsPerPage);
 $orders = $result['orders'];
 $totalPages = $result['total_pages'];
 $totalItems = $result['total'];
 
+$success_message = isset($_SESSION['success']) ? $_SESSION['success'] : '';
+$error_message = isset($_SESSION['error']) ? $_SESSION['error'] : '';
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 
 <div class="row">
     <div class="col-12">
         <div class="card">
             <div class="card-body">
+                <?php if ($success_message): ?>
+                    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                        <i class="ti ti-check me-2"></i><?= htmlspecialchars($success_message) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($error_message): ?>
+                    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                        <i class="ti ti-x me-2"></i><?= htmlspecialchars($error_message) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
                 <div class="d-md-flex align-items-center justify-content-between mb-4">
                     <div>
-                        <h4 class="card-title">Daftar Pesanan</h4>
+                        <h4 class="card-title">Manajemen Pesanan</h4>
                         <p class="card-subtitle">
-                            Semua pesanan yang telah kamu buat
+                            Kelola semua pesanan customer
                             <?php if ($totalItems > 0): ?>
                                 <span class="badge bg-primary ms-2"><?= $totalItems ?> pesanan</span>
                             <?php endif; ?>
@@ -42,9 +57,9 @@ $totalItems = $result['total'];
                                 <input type="text"
                                     class="form-control"
                                     name="search"
-                                    placeholder="Cari pesanan..."
+                                    placeholder="Cari pesanan/customer..."
                                     value="<?= htmlspecialchars($search) ?>"
-                                    style="min-width: 200px;">
+                                    style="min-width: 250px;">
                                 <button type="submit" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-1">
                                     <i class="ti ti-search"></i>
                                 </button>
@@ -56,6 +71,7 @@ $totalItems = $result['total'];
                                 <option value="tertunda" <?= $status === 'tertunda' ? 'selected' : '' ?>>Tertunda</option>
                                 <option value="berhasil" <?= $status === 'berhasil' ? 'selected' : '' ?>>Berhasil</option>
                                 <option value="gagal" <?= $status === 'gagal' ? 'selected' : '' ?>>Gagal</option>
+                                <option value="selesai" <?= $status === 'selesai' ? 'selected' : '' ?>>Selesai</option>
                             </select>
 
                             <?php if (!empty($search) || !empty($status)): ?>
@@ -90,88 +106,90 @@ $totalItems = $result['total'];
                                 <p class="text-muted">Coba ubah kriteria pencarian atau filter</p>
                                 <a href="?page=order.index" class="btn btn-outline-primary">Lihat Semua Pesanan</a>
                             <?php else: ?>
-                                <p class="text-muted">Belum ada pesanan yang dibuat</p>
-                                <a href="/apotek-alifa/layouts/landing/?page=shop" class="btn btn-primary">Mulai Berbelanja</a>
+                                <p class="text-muted">Belum ada pesanan yang masuk</p>
                             <?php endif; ?>
                         </div>
                     <?php else: ?>
                         <table class="table mb-4 text-nowrap align-middle">
                             <thead>
                                 <tr>
-                                    <th scope="col" class="px-0 text-muted">No.</th>
-                                    <th scope="col" class="px-0 text-muted">Penerima</th>
-                                    <th scope="col" class="px-0 text-muted">Total & Items</th>
-                                    <th scope="col" class="px-0 text-muted">Status</th>
-                                    <th scope="col" class="px-0 text-muted text-end">Aksi</th>
+                                    <th scope="col">Order ID</th>
+                                    <th scope="col">Customer</th>
+                                    <th scope="col">Penerima</th>
+                                    <th scope="col">Total</th>
+                                    <th scope="col">Pembayaran</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Tanggal</th>
+                                    <th scope="col" class="text-end">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php
-                                // Calculate correct row number based on pagination
-                                $rowNumber = ($currentPage - 1) * $itemsPerPage + 1;
-                                ?>
                                 <?php foreach ($orders as $order): ?>
                                     <tr>
-                                        <td class="px-0">
+                                        <td>
+                                            <strong>#<?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?></strong>
+                                        </td>
+
+                                        <td>
                                             <div>
-                                                <h6><?= $rowNumber++ ?></h6>
+                                                <h6 class="mb-0"><?= htmlspecialchars($order['order_username']) ?></h6>
+                                                <small class="text-muted">ID: <?= $order['user_id'] ?></small>
                                             </div>
                                         </td>
 
-                                        <td class="px-0">
+                                        <td>
                                             <div>
-                                                <h6 class="mb-1 fw-semibold"><?= htmlspecialchars($order['recipient_name']) ?></h6>
+                                                <h6 class="mb-0"><?= htmlspecialchars($order['recipient_name']) ?></h6>
                                                 <small class="text-muted">
-                                                    <i class="ti ti-mail me-1"></i>
+                                                    <i class="ti ti-mail fs-6"></i>
                                                     <?= htmlspecialchars($order['recipient_email']) ?>
                                                 </small>
-                                                <br>
-                                                <small class="text-muted">
-                                                    Order ID: #<?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?>
-                                                </small>
                                             </div>
                                         </td>
 
-                                        <td class="px-0">
+                                        <td>
                                             <div>
-                                                <h6 class="mb-1 fw-bold text-primary">
-                                                    Rp<?= number_format($order['total_price'], 0, '.', ',') ?>
+                                                <h6 class="mb-0 text-primary">
+                                                    Rp<?= number_format($order['total_price'], 0, ',', '.') ?>
                                                 </h6>
                                                 <small class="text-muted">
-                                                    <i class="ti ti-package me-1"></i>
                                                     <?= $order['item_count'] ?> item
-                                                </small>
-                                                <br>
-                                                <small class="text-muted">
-                                                    <?= date('d M Y', strtotime($order['created_at'])) ?>
                                                 </small>
                                             </div>
                                         </td>
 
-                                        <td class="px-0">
+                                        <td>
                                             <?php if (!empty($order['proof_of_payment'])): ?>
-                                                <span class="badge bg-success">
-                                                    <i class="ti ti-check me-1"></i>Berhasil
-                                                </span>
-                                            <?php elseif ($order['status'] === 'tertunda'): ?>
-                                                <span class="badge bg-warning">
-                                                    <i class="ti ti-clock me-1"></i>Tertunda
-                                                </span>
-                                            <?php elseif ($order['status'] === 'gagal'): ?>
-                                                <span class="badge bg-danger">
-                                                    <i class="ti ti-x me-1"></i>Gagal
+                                                <span class="badge bg-success-subtle text-success">
+                                                    <i class="ti ti-check"></i> Sudah Upload
                                                 </span>
                                             <?php else: ?>
-                                                <span class="badge bg-info">
-                                                    <i class="ti ti-info me-1"></i><?= ucfirst($order['status']) ?>
+                                                <span class="badge bg-warning-subtle text-warning">
+                                                    <i class="ti ti-clock"></i> Belum Upload
                                                 </span>
                                             <?php endif; ?>
                                         </td>
 
-                                        <td class="px-0 text-end">
+                                        <td>
+                                            <?php
+                                            $badge_info = getOrderStatusBadge($order['status']);
+                                            ?>
+                                            <span class="badge bg-<?= $badge_info['class'] ?>">
+                                                <i class="ti ti-<?= $badge_info['icon'] ?> me-1"></i>
+                                                <?= $badge_info['text'] ?>
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            <small><?= date('d M Y', strtotime($order['created_at'])) ?></small>
+                                            <br>
+                                            <small class="text-muted"><?= date('H:i', strtotime($order['created_at'])) ?></small>
+                                        </td>
+
+                                        <td class="text-end">
                                             <a href="/apotek-alifa/layouts/dashboard?page=order.show&order_id=<?= $order['id'] ?>"
                                                 class="btn btn-sm btn-outline-primary">
-                                                <i class="ti ti-eye me-1"></i>Lihat
+                                                <i class="ti ti-eye"></i> Detail
                                             </a>
                                         </td>
                                     </tr>
@@ -179,7 +197,7 @@ $totalItems = $result['total'];
                             </tbody>
                         </table>
 
-                        <!-- PAGINATION - Always show if totalPages > 1 -->
+                        <!-- PAGINATION -->
                         <?php if ($totalPages > 1): ?>
                             <div class="d-flex justify-content-between align-items-center mt-4">
                                 <div>
@@ -208,7 +226,6 @@ $totalItems = $result['total'];
                                         $startPage = max(1, $currentPage - 2);
                                         $endPage = min($totalPages, $currentPage + 2);
 
-                                        // Always show first page if we're not close to it
                                         if ($startPage > 1):
                                         ?>
                                             <li class="page-item">
@@ -221,14 +238,12 @@ $totalItems = $result['total'];
                                             <?php endif; ?>
                                         <?php endif; ?>
 
-                                        <!-- Current range of pages -->
                                         <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
                                             <li class="page-item <?= $i == $currentPage ? 'active' : '' ?>">
                                                 <a class="page-link" href="<?= buildOrderPaginationUrl($i, $search, $status) ?>"><?= $i ?></a>
                                             </li>
                                         <?php endfor; ?>
 
-                                        <!-- Always show last page if we're not close to it -->
                                         <?php if ($endPage < $totalPages): ?>
                                             <?php if ($endPage < $totalPages - 1): ?>
                                                 <li class="page-item disabled">
@@ -256,7 +271,6 @@ $totalItems = $result['total'];
                                 </nav>
                             </div>
                         <?php else: ?>
-                            <!-- Single page info -->
                             <div class="text-center mt-3">
                                 <small class="text-muted">
                                     Menampilkan semua <?= $totalItems ?> pesanan
@@ -273,11 +287,17 @@ $totalItems = $result['total'];
 <style>
     .badge {
         font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
     }
 
     .table td {
         vertical-align: middle;
-        padding: 1rem 0;
+        padding: 1rem 0.5rem;
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #5a5a5a;
     }
 
     .pagination .page-link {
@@ -316,28 +336,16 @@ $totalItems = $result['total'];
             min-width: auto !important;
         }
 
-        .d-flex.justify-content-between {
-            flex-direction: column;
-            gap: 1rem;
+        .table {
+            font-size: 0.875rem;
         }
     }
 </style>
 
 <script>
-    function showToast(message, type = 'info') {
-        console.log(`Toast: ${message} (${type})`);
-    }
-
     document.querySelector('input[name="search"]').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            this.form.submit();
-        }
-    });
-
-    document.querySelector('input[name="search"]').addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            this.value = '';
             this.form.submit();
         }
     });
