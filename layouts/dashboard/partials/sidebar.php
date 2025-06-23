@@ -40,7 +40,7 @@ $user = getUserData();
             </li>
             <?php if ($user['role'] === 'admin') : ?>
                 <li class="sidebar-item">
-                    <a class="sidebar-link justify-content-between"
+                    <a class="sidebar-link <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'user.index' ? 'active' : '' ?> <?php endif; ?> justify-content-between"
                         href="/apotek-alifa/layouts/dashboard?page=user.index"
                         aria-expanded="false">
                         <div class="d-flex align-items-center gap-3">
@@ -53,7 +53,7 @@ $user = getUserData();
                     </a>
                 </li>
                 <li class="sidebar-item">
-                    <a class="sidebar-link justify-content-between"
+                    <a class="sidebar-link <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'product.index' ? 'active' : '' ?> <?php endif; ?> justify-content-between"
                         href="/apotek-alifa/layouts/dashboard?page=product.index" aria-expanded="false">
                         <div class="d-flex align-items-center gap-3">
                             <span class="d-flex">

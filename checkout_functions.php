@@ -13,22 +13,18 @@ function createOrder($orderData)
     $user_id = $_SESSION['user_id'];
 
     try {
-        // Start transaction
         $conn->autocommit(false);
 
-        // Get cart items
         $cartItems = getCartItems($user_id);
         if (empty($cartItems)) {
             throw new Exception('Keranjang kosong!');
         }
 
-        // Calculate total
         $total_price = 0;
         foreach ($cartItems as $item) {
             $total_price += $item['quantity'] * $item['price_at_add'];
         }
 
-        // Insert into orders table
         $orderQuery = "INSERT INTO orders (user_id, status, total_price, street_address, recipient_name, recipient_email, recipient_phone, notes, created_at, updated_at) VALUES (?, 'tertunda', ?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
         $orderStmt = $conn->prepare($orderQuery);
@@ -54,7 +50,6 @@ function createOrder($orderData)
         $order_id = $conn->insert_id;
         $orderStmt->close();
 
-        // Insert into order_items table
         $orderItemQuery = "INSERT INTO order_items (order_id, product_id, quantity, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
         $orderItemStmt = $conn->prepare($orderItemQuery);
 
@@ -68,7 +63,6 @@ function createOrder($orderData)
                 throw new Exception('Failed to insert order item: ' . $orderItemStmt->error);
             }
 
-            // Update product stock
             $updateStockQuery = "UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?";
             $updateStockStmt = $conn->prepare($updateStockQuery);
             $updateStockStmt->bind_param("iii", $item['quantity'], $item['product_id'], $item['quantity']);
@@ -77,7 +71,6 @@ function createOrder($orderData)
                 throw new Exception('Failed to update stock for product ID: ' . $item['product_id']);
             }
 
-            // Check if stock update was successful
             if ($updateStockStmt->affected_rows === 0) {
                 throw new Exception('Insufficient stock for product: ' . $item['name']);
             }
@@ -87,7 +80,6 @@ function createOrder($orderData)
 
         $orderItemStmt->close();
 
-        // Insert into payments table (initial record)
         $paymentQuery = "INSERT INTO payments (order_id, proof_of_payment, created_at, updated_at) VALUES (?, NULL, NOW(), NOW())";
         $paymentStmt = $conn->prepare($paymentQuery);
 
@@ -101,12 +93,10 @@ function createOrder($orderData)
         }
         $paymentStmt->close();
 
-        // Clear cart
         if (!clearCart($user_id)) {
             throw new Exception('Failed to clear cart');
         }
 
-        // Commit transaction
         $conn->commit();
         $conn->autocommit(true);
         $conn->close();
@@ -118,7 +108,6 @@ function createOrder($orderData)
             'total_price' => $total_price
         ];
     } catch (Exception $e) {
-        // Rollback transaction
         $conn->rollback();
         $conn->autocommit(true);
         $conn->close();
@@ -139,7 +128,6 @@ function getOrderDetails($order_id)
     $conn = connectDB();
     $user_id = $_SESSION['user_id'];
 
-    // Get order with items
     $query = "SELECT o.*, 
                      GROUP_CONCAT(CONCAT(p.name, ' (', oi.quantity, 'x)') SEPARATOR ', ') as items
               FROM orders o
@@ -174,7 +162,6 @@ function uploadPaymentProof($order_id, $file)
     $user_id = $_SESSION['user_id'];
 
     try {
-        // Verify order belongs to user
         $verifyQuery = "SELECT id FROM orders WHERE id = ? AND user_id = ?";
         $verifyStmt = $conn->prepare($verifyQuery);
         $verifyStmt->bind_param("ii", $order_id, $user_id);
@@ -186,7 +173,6 @@ function uploadPaymentProof($order_id, $file)
         }
         $verifyStmt->close();
 
-        // Handle file upload
         $uploadDir = '../../assets/img/payments/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
@@ -199,7 +185,7 @@ function uploadPaymentProof($order_id, $file)
             throw new Exception('File type not allowed. Please upload JPG, PNG, or PDF');
         }
 
-        if ($file['size'] > 5 * 1024 * 1024) { // 5MB limit
+        if ($file['size'] > 5 * 1024 * 1024) {
             throw new Exception('File size too large. Maximum 5MB allowed');
         }
 
@@ -210,20 +196,17 @@ function uploadPaymentProof($order_id, $file)
             throw new Exception('Failed to upload file');
         }
 
-        // Update payments table
         $updateQuery = "UPDATE payments SET proof_of_payment = ?, updated_at = NOW() WHERE order_id = ?";
         $updateStmt = $conn->prepare($updateQuery);
         $updateStmt->bind_param("si", $fileName, $order_id);
 
         if (!$updateStmt->execute()) {
-            // Delete uploaded file if database update fails
             unlink($uploadPath);
             throw new Exception('Failed to update payment record');
         }
 
         $updateStmt->close();
 
-        // Update order status to 'berhasil' (payment uploaded)
         $statusQuery = "UPDATE orders SET status = 'berhasil', updated_at = NOW() WHERE id = ?";
         $statusStmt = $conn->prepare($statusQuery);
         $statusStmt->bind_param("i", $order_id);

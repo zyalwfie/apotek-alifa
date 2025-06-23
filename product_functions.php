@@ -1,6 +1,4 @@
 <?php
-// include 'auth_functions.php';
-
 function getAllProductsWithPagination($search = '', $category = '', $page = 1, $limit = 5)
 {
     $conn = connectDB();

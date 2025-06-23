@@ -7,7 +7,7 @@ requireAdmin();
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $category = isset($_GET['category']) ? trim($_GET['category']) : '';
 $currentPage = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
-$itemsPerPage = 10;
+$itemsPerPage = 5;
 
 $result = getAllProductsWithPagination($search, $category, $currentPage, $itemsPerPage);
 $products = $result['products'];
@@ -25,19 +25,6 @@ unset($_SESSION['success'], $_SESSION['error']);
     <div class="col-12">
         <div class="card">
             <div class="card-body">
-                <?php if ($success_message): ?>
-                    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-                        <i class="ti ti-check me-2"></i><?= htmlspecialchars($success_message) ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
-
-                <?php if ($error_message): ?>
-                    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
-                        <i class="ti ti-x me-2"></i><?= htmlspecialchars($error_message) ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                <?php endif; ?>
 
                 <div class="d-md-flex align-items-center justify-content-between mb-4">
                     <div>
@@ -52,7 +39,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                     <div class="d-flex gap-3 align-items-center">
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                            <i class="ti ti-plus me-1"></i>Tambah Produk
+                            <i class="ti ti-plus me-1"></i>Tambah
                         </button>
 
                         <form method="get" class="d-flex align-items-center gap-3">
@@ -87,6 +74,23 @@ unset($_SESSION['success'], $_SESSION['error']);
                         </form>
                     </div>
                 </div>
+
+                <?php if (isset($_SESSION['message'])) : ?>
+                    <div class="alert alert-<?= $_SESSION['message_type'] ?> d-flex gap-1 align-items-center" role="alert">
+                        <?php if ($_SESSION['message_type'] === 'success') : ?>
+                            <i class="ti ti-check"></i>
+                        <?php else : ?>
+                            <i class="ti ti-x"></i>
+                        <?php endif; ?>
+                        <div>
+                            <?= $_SESSION['message'] ?>
+                        </div>
+                    </div>
+                    <?php
+                    unset($_SESSION['message']);
+                    unset($_SESSION['message_type']);
+                    ?>
+                <?php endif; ?>
 
                 <div class="table-responsive mt-4">
                     <?php if (empty($products)): ?>
@@ -149,12 +153,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                 onclick="viewProduct(<?= $product['id'] ?>)">
                                                 <i class="ti ti-eye"></i>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                                onclick="editProduct(<?= $product['id'] ?>)">
-                                                <i class="ti ti-edit"></i>
+                                            <button class="btn btn-sm btn-outline-primary edit-btn"
+                                                data-product='<?= json_encode($product) ?>' data-bs-target="#editProductModal" data-bs-toggle="modal">
+                                                <i class="ti ti-pencil"></i>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger"
-                                                onclick="deleteProduct(<?= $product['id'] ?>, '<?= htmlspecialchars($product['name']) ?>')">
+                                            <button type="button" class="btn btn-sm btn-outline-danger delete-btn" data-bs-target="#deleteProductModal" data-bs-toggle="modal" data-product='<?= json_encode($product) ?>'>
                                                 <i class="ti ti-trash"></i>
                                             </button>
                                         </td>
@@ -219,7 +222,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 <h5 class="modal-title">Tambah Produk Baru</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="addProductForm" method="POST" enctype="multipart/form-data">
+            <form id="addProductForm" method="POST" enctype="multipart/form-data" action="/apotek-alifa/add_products.php">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-body">
                     <div class="row g-3">
@@ -228,23 +231,19 @@ unset($_SESSION['success'], $_SESSION['error']);
                             <input type="text" class="form-control" name="name" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">SKU <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="sku" required>
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label">Kategori <span class="text-danger">*</span></label>
                             <select class="form-select" name="category_id" required>
                                 <option value="">Pilih Kategori</option>
-                                <?php foreach ($categories as $cat): ?>
-                                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                                <?php foreach ($categories as $category): ?>
+                                    <option value="<?= $category['id'] ?>"><?= htmlspecialchars($category['name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <label class="form-label">Harga <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="price" min="0" step="100" required>
+                            <input type="number" class="form-control" name="price" min="0" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <label class="form-label">Stok <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" name="stock" min="0" required>
                         </div>
@@ -278,30 +277,29 @@ unset($_SESSION['success'], $_SESSION['error']);
                 <h5 class="modal-title">Edit Produk</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="editProductForm" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="action" value="update">
-                <input type="hidden" name="product_id" id="editProductId">
+            <form id="editProductForm" method="POST" enctype="multipart/form-data" action="/apotek-alifa/edit_product.php">
+                <input type="hidden" name="product_id" id="productId">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Nama Produk <span class="text-danger">*</span></label>
+                            <label class="form-label">Nama Produk</label>
                             <input type="text" class="form-control" name="name" id="editName" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Kategori <span class="text-danger">*</span></label>
+                            <label class="form-label">Kategori</label>
                             <select class="form-select" name="category_id" id="editCategory" required>
-                                <option value="">Pilih Kategori</option>
+                                <option>Pilih Kategori</option>
                                 <?php foreach ($categories as $cat): ?>
                                     <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Harga <span class="text-danger">*</span></label>
+                            <label class="form-label">Harga</label>
                             <input type="number" class="form-control" name="price" id="editPrice" min="0" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Stok <span class="text-danger">*</span></label>
+                            <label class="form-label">Stok</label>
                             <input type="number" class="form-control" name="stock" id="editStock" min="0" required>
                         </div>
                         <div class="col-12">
@@ -323,6 +321,28 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yakin ingin menghapus?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Perbuatan ini tidak dapat dibatalkan, perhatikan dengan baik-baik.</p>
+            </div>
+            <div class="modal-footer">
+                <form action="/apotek-alifa/delete_product.php" method="post">
+                    <input type="hidden" name="product_id" id="deleteProductId">
+                    <button type="button" data-bs-dismiss="modal" class="btn btn-secondary">Kembali</button>
+                    <button type="submit" class="btn btn-danger">Ya, Hapus sekarang</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -377,132 +397,30 @@ unset($_SESSION['success'], $_SESSION['error']);
 </div>
 
 <script>
-    function previewImage(event, previewId) {
-        const file = event.target.files[0];
-        const preview = document.getElementById(previewId);
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const product = JSON.parse(this.getAttribute('data-product'));
 
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">`;
+            document.getElementById('productId').value = product.id;
+            document.getElementById('editName').value = product.name;
+            document.getElementById('editPrice').value = product.price;
+            document.getElementById('editStock').value = product.stock;
+            document.getElementById('editDescription').value = product.description;
+            document.getElementById('editCategory').value = product.category_id
+
+            if (product.image) {
+                document.getElementById('editCurrentImage').innerHTML =
+                    `<img src="/apotek-alifa/assets/img/product/uploads/${product.image}" 
+                     alt="${product.name}" class="img-thumbnail" style="max-height: 100px;">`;
             }
-            reader.readAsDataURL(file);
-        } else {
-            preview.innerHTML = '';
-        }
-    }
-
-    function viewProduct(productId) {
-        fetch(`/apotek-alifa/dashboard/admin/product/get_product.php?id=${productId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const product = data.product;
-                    document.getElementById('viewName').textContent = product.name;
-                    document.getElementById('viewCategory').textContent = product.category_name || 'Tidak ada kategori';
-                    document.getElementById('viewPrice').textContent = 'Rp' + new Intl.NumberFormat('id-ID').format(product.price);
-                    document.getElementById('viewStock').innerHTML = product.stock > 20 ?
-                        `<span class="badge bg-success">${product.stock}</span>` :
-                        product.stock > 0 ?
-                        `<span class="badge bg-warning">${product.stock}</span>` :
-                        `<span class="badge bg-danger">Habis</span>`;
-                    document.getElementById('viewTotalOrders').textContent = product.total_orders || '0';
-                    document.getElementById('viewDescription').textContent = product.description || 'Tidak ada deskripsi';
-                    document.getElementById('viewImage').src = '/apotek-alifa/assets/img/product/uploads/' + product.image;
-
-                    new bootstrap.Modal(document.getElementById('viewProductModal')).show();
-                }
-            });
-    }
-
-    function editProduct(productId) {
-        fetch(`/apotek-alifa/dashboard/admin/product/get_product.php?id=${productId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const product = data.product;
-                    document.getElementById('editProductId').value = product.id;
-                    document.getElementById('editName').value = product.name;
-                    document.getElementById('editCategory').value = product.category_id;
-                    document.getElementById('editPrice').value = product.price;
-                    document.getElementById('editStock').value = product.stock;
-                    document.getElementById('editDescription').value = product.description;
-                    document.getElementById('editCurrentImage').innerHTML =
-                        `<small class="text-muted">Gambar saat ini:</small><br>
-                     <img src="/apotek-alifa/assets/img/product/uploads/${product.image}" class="img-fluid rounded" style="max-height: 100px;">`;
-
-                    new bootstrap.Modal(document.getElementById('editProductModal')).show();
-                }
-            });
-    }
-
-    function deleteProduct(productId, productName) {
-        if (confirm(`Apakah Anda yakin ingin menghapus produk "${productName}"?`)) {
-            const formData = new FormData();
-            formData.append('action', 'delete');
-            formData.append('product_id', productId);
-
-            fetch('/apotek-alifa/dashboard/admin/product/ajax_handler.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan. Silakan coba lagi.');
-                });
-        }
-    }
-
-    document.getElementById('addProductForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-
-        fetch('/apotek-alifa/dashboard/admin/product/ajax_handler.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan. Silakan coba lagi.');
-            });
+        });
     });
 
-    document.getElementById('editProductForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-
-        fetch('/apotek-alifa/dashboard/admin/product/ajax_handler.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Terjadi kesalahan. Silakan coba lagi.');
-            });
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const product = JSON.parse(this.getAttribute('data-product'));
+            document.getElementById('deleteProductId').value = product.id;
+        });
     });
 </script>
 
