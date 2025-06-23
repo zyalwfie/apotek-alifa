@@ -41,7 +41,7 @@ $user = getUserData();
             <?php if ($user['role'] === 'admin') : ?>
                 <li class="sidebar-item">
                     <a class="sidebar-link justify-content-between"
-                        href="/apotek-alifa/layouts/dashboard/admin?page=user.index"
+                        href="/apotek-alifa/layouts/dashboard?page=user.index"
                         aria-expanded="false">
                         <div class="d-flex align-items-center gap-3">
                             <span class="d-flex">
@@ -54,7 +54,7 @@ $user = getUserData();
                 </li>
                 <li class="sidebar-item">
                     <a class="sidebar-link justify-content-between"
-                        href="/apotek-alifa/dashboard/admin?page=product.index" aria-expanded="false">
+                        href="/apotek-alifa/layouts/dashboard?page=product.index" aria-expanded="false">
                         <div class="d-flex align-items-center gap-3">
                             <span class="d-flex">
                                 <i class="ti ti-briefcase"></i>

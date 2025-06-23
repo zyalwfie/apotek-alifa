@@ -86,17 +86,6 @@ $totalItems = $result['total'];
 										<p class="text-muted small mb-2"><?= htmlspecialchars(substr($product->description, 0, 50)) ?>...</p>
 									<?php endif; ?>
 
-									<!-- Product rating -->
-									<div class="d-flex justify-content-center align-items-center mb-2">
-										<div class="d-flex text-warning me-2" style="font-size: 0.8rem;">
-											<i class="bi bi-star-fill"></i>
-											<i class="bi bi-star-fill"></i>
-											<i class="bi bi-star-fill"></i>
-											<i class="bi bi-star-fill"></i>
-											<i class="bi bi-star"></i>
-										</div>
-										<small class="text-muted">(4.2)</small>
-									</div>
 								</div>
 							</div>
 

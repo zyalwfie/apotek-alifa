@@ -1,5 +1,4 @@
 <?php
-// auth_functions.php
 session_start();
 
 function connectDB()

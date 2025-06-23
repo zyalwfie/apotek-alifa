@@ -2,7 +2,8 @@
 require_once 'functions.php';
 require_once 'auth_functions.php';
 
-// Get product ID from URL
+$user = getUserData();
+
 $product_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($product_id <= 0) {
@@ -10,7 +11,6 @@ if ($product_id <= 0) {
     exit;
 }
 
-// Get product details
 $product = getData("SELECT * FROM products WHERE id = ?", [$product_id]);
 if (!$product) {
     header('Location: ?page=shop');
@@ -18,7 +18,6 @@ if (!$product) {
 }
 $product = $product[0];
 
-// Get related products (same category or random if no category)
 $related_query = "SELECT * FROM products WHERE id != ? ORDER BY RAND() LIMIT 4";
 $related_products = getData($related_query, [$product_id]) ?: [];
 ?>
@@ -106,53 +105,55 @@ $related_products = getData($related_query, [$product_id]) ?: [];
                     </ul>
                 </div>
 
-                <!-- Add to cart section -->
-                <div class="card border-0 bg-light p-4">
-                    <div class="row align-items-center">
-                        <div class="col-4">
-                            <div class="input-group">
-                                <button class="btn btn-outline-secondary" type="button" id="decreaseQty">
-                                    <i class="bi bi-dash"></i>
-                                </button>
-                                <input class="form-control text-center" id="inputQuantity" type="number" value="1" min="1" max="<?= $product->stock ?? 99 ?>" />
-                                <button class="btn btn-outline-secondary" type="button" id="increaseQty">
-                                    <i class="bi bi-plus"></i>
-                                </button>
+                <?php if ($user['role'] === 'user') : ?>
+                    <!-- Add to cart section -->
+                    <div class="card border-0 bg-light p-4">
+                        <div class="row align-items-center">
+                            <div class="col-4">
+                                <div class="input-group">
+                                    <button class="btn btn-outline-secondary" type="button" id="decreaseQty">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input class="form-control text-center" id="inputQuantity" type="number" value="1" min="1" max="<?= $product->stock ?? 99 ?>" />
+                                    <button class="btn btn-outline-secondary" type="button" id="increaseQty">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-8">
+                                <?php if (isLoggedIn()): ?>
+                                    <?php if (isset($product->stock) && $product->stock > 0): ?>
+                                        <button class="btn btn-primary btn-lg w-100 add-to-cart-btn"
+                                            data-product-id="<?= $product->id ?>"
+                                            data-product-name="<?= htmlspecialchars($product->name) ?>">
+                                            <i class="bi bi-cart-plus me-2"></i>
+                                            Tambah ke Keranjang
+                                        </button>
+                                    <?php else: ?>
+                                        <button class="btn btn-secondary btn-lg w-100" disabled>
+                                            <i class="bi bi-x-circle me-2"></i>
+                                            Stok Habis
+                                        </button>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <button class="btn btn-outline-primary btn-lg w-100" onclick="loginRequired()">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                                        Login untuk Beli
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
 
-                        <div class="col-8">
-                            <?php if (isLoggedIn()): ?>
-                                <?php if (isset($product->stock) && $product->stock > 0): ?>
-                                    <button class="btn btn-primary btn-lg w-100 add-to-cart-btn"
-                                        data-product-id="<?= $product->id ?>"
-                                        data-product-name="<?= htmlspecialchars($product->name) ?>">
-                                        <i class="bi bi-cart-plus me-2"></i>
-                                        Tambah ke Keranjang
-                                    </button>
-                                <?php else: ?>
-                                    <button class="btn btn-secondary btn-lg w-100" disabled>
-                                        <i class="bi bi-x-circle me-2"></i>
-                                        Stok Habis
-                                    </button>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <button class="btn btn-outline-primary btn-lg w-100" onclick="loginRequired()">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i>
-                                    Login untuk Beli
-                                </button>
-                            <?php endif; ?>
+                        <!-- Additional info -->
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Konsultasikan dengan apoteker jika Anda memiliki kondisi medis tertentu
+                            </small>
                         </div>
                     </div>
-
-                    <!-- Additional info -->
-                    <div class="mt-3">
-                        <small class="text-muted">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Konsultasikan dengan apoteker jika Anda memiliki kondisi medis tertentu
-                        </small>
-                    </div>
-                </div>
+                <?php endif; ?>
 
                 <!-- Back to shop button -->
                 <div class="mt-4">
@@ -194,7 +195,7 @@ $related_products = getData($related_query, [$product_id]) ?: [];
                                     <a class="btn btn-outline-primary btn-sm" href="?page=show&id=<?= $related->id ?>">
                                         <i class="bi bi-eye me-1"></i>Detail
                                     </a>
-                                    <?php if (isLoggedIn()): ?>
+                                    <?php if (isLoggedIn() && $user['role'] === 'user'): ?>
                                         <button class="btn btn-primary btn-sm add-to-cart-btn"
                                             data-product-id="<?= $related->id ?>"
                                             data-product-name="<?= htmlspecialchars($related->name) ?>">

@@ -74,7 +74,7 @@ $products = getData('select * from products limit 4');
         <div class="row gy-4 gx-5">
 
             <div class="col-lg-6 position-relative align-self-start" data-aos="fade-up" data-aos-delay="200">
-                <img src="../../assets/img/about.jpg" class="img-fluid" alt="Gambar Tentang Kami">
+                <img src="../../assets/img/about.png" class="img-fluid" alt="Gambar Tentang Kami">
             </div>
 
             <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="100">

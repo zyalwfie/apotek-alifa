@@ -1,0 +1,526 @@
+<?php
+require_once '../../product_functions.php';
+require_once '../../order_functions.php';
+
+requireAdmin();
+
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$category = isset($_GET['category']) ? trim($_GET['category']) : '';
+$currentPage = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
+$itemsPerPage = 10;
+
+$result = getAllProductsWithPagination($search, $category, $currentPage, $itemsPerPage);
+$products = $result['products'];
+$totalPages = $result['total_pages'];
+$totalItems = $result['total'];
+
+$categories = getAllCategories();
+
+$success_message = isset($_SESSION['success']) ? $_SESSION['success'] : '';
+$error_message = isset($_SESSION['error']) ? $_SESSION['error'] : '';
+unset($_SESSION['success'], $_SESSION['error']);
+?>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <?php if ($success_message): ?>
+                    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                        <i class="ti ti-check me-2"></i><?= htmlspecialchars($success_message) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($error_message): ?>
+                    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                        <i class="ti ti-x me-2"></i><?= htmlspecialchars($error_message) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                <?php endif; ?>
+
+                <div class="d-md-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h4 class="card-title">Kelola Produk</h4>
+                        <p class="card-subtitle">
+                            Manajemen semua produk apotek
+                            <?php if ($totalItems > 0): ?>
+                                <span class="badge bg-primary ms-2"><?= $totalItems ?> produk</span>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+
+                    <div class="d-flex gap-3 align-items-center">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                            <i class="ti ti-plus me-1"></i>Tambah Produk
+                        </button>
+
+                        <form method="get" class="d-flex align-items-center gap-3">
+                            <input type="hidden" name="page" value="product.index">
+
+                            <div class="position-relative">
+                                <input type="text"
+                                    class="form-control"
+                                    name="search"
+                                    placeholder="Cari produk..."
+                                    value="<?= htmlspecialchars($search) ?>"
+                                    style="min-width: 250px;">
+                                <button type="submit" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-1">
+                                    <i class="ti ti-search"></i>
+                                </button>
+                            </div>
+
+                            <select class="form-select" name="category" style="min-width: 150px;" onchange="this.form.submit()">
+                                <option value="">Semua Kategori</option>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?= $cat['id'] ?>" <?= $category == $cat['id'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($cat['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+
+                            <?php if (!empty($search) || !empty($category)): ?>
+                                <a href="?page=product.index" class="btn btn-outline-secondary">
+                                    <i class="ti ti-x"></i>
+                                </a>
+                            <?php endif; ?>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-4">
+                    <?php if (empty($products)): ?>
+                        <div class="text-center py-5">
+                            <i class="ti ti-package-off" style="font-size: 4rem; color: #6c757d;"></i>
+                            <h5 class="mt-3 text-muted">Tidak ada produk ditemukan</h5>
+                            <?php if (!empty($search) || !empty($category)): ?>
+                                <p class="text-muted">Coba ubah kriteria pencarian atau filter</p>
+                                <a href="?page=product.index" class="btn btn-outline-primary">Lihat Semua Produk</a>
+                            <?php else: ?>
+                                <p class="text-muted">Belum ada produk yang ditambahkan</p>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                    <i class="ti ti-plus me-1"></i>Tambah Produk Pertama
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                    <?php else: ?>
+                        <table class="table mb-4 text-nowrap align-middle">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Produk</th>
+                                    <th scope="col">Kategori</th>
+                                    <th scope="col">Harga</th>
+                                    <th scope="col">Stok</th>
+                                    <th scope="col" class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($products as $product): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($product['image']) ?>"
+                                                    alt="<?= htmlspecialchars($product['name']) ?>"
+                                                    class="rounded me-3"
+                                                    style="width: 50px; height: 50px; object-fit: cover;">
+                                                <div>
+                                                    <h6 class="mb-0"><?= htmlspecialchars($product['name']) ?></h6>
+                                                    <small class="text-muted">
+                                                        <?= htmlspecialchars(substr($product['description'], 0, 50)) ?>...
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><?= htmlspecialchars($product['category_name'] ?: 'Tidak ada kategori') ?></td>
+                                        <td>
+                                            <strong>Rp<?= number_format($product['price'], 0, ',', '.') ?></strong>
+                                        </td>
+                                        <td>
+                                            <?php if ($product['stock'] > 20): ?>
+                                                <span class="badge bg-success"><?= $product['stock'] ?></span>
+                                            <?php elseif ($product['stock'] > 0): ?>
+                                                <span class="badge bg-warning"><?= $product['stock'] ?></span>
+                                            <?php else: ?>
+                                                <span class="badge bg-danger">Habis</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                onclick="viewProduct(<?= $product['id'] ?>)">
+                                                <i class="ti ti-eye"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                onclick="editProduct(<?= $product['id'] ?>)">
+                                                <i class="ti ti-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                onclick="deleteProduct(<?= $product['id'] ?>, '<?= htmlspecialchars($product['name']) ?>')">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+
+                        <!-- PAGINATION -->
+                        <?php if ($totalPages > 1): ?>
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <div>
+                                    <small class="text-muted">
+                                        Menampilkan <?= count($products) ?> dari <?= $totalItems ?> produk
+                                    </small>
+                                </div>
+
+                                <nav aria-label="Product pagination">
+                                    <ul class="pagination pagination-sm mb-0">
+                                        <?php if ($currentPage > 1): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?= buildProductPaginationUrl($currentPage - 1, $search, $category) ?>">
+                                                    <i class="ti ti-chevron-left"></i>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+
+                                        <?php
+                                        $startPage = max(1, $currentPage - 2);
+                                        $endPage = min($totalPages, $currentPage + 2);
+
+                                        for ($i = $startPage; $i <= $endPage; $i++):
+                                        ?>
+                                            <li class="page-item <?= $i == $currentPage ? 'active' : '' ?>">
+                                                <a class="page-link" href="<?= buildProductPaginationUrl($i, $search, $category) ?>"><?= $i ?></a>
+                                            </li>
+                                        <?php endfor; ?>
+
+                                        <?php if ($currentPage < $totalPages): ?>
+                                            <li class="page-item">
+                                                <a class="page-link" href="<?= buildProductPaginationUrl($currentPage + 1, $search, $category) ?>">
+                                                    <i class="ti ti-chevron-right"></i>
+                                                </a>
+                                            </li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </nav>
+                            </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Produk Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addProductForm" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Produk <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">SKU <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="sku" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kategori <span class="text-danger">*</span></label>
+                            <select class="form-select" name="category_id" required>
+                                <option value="">Pilih Kategori</option>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Harga <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="price" min="0" step="100" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Stok <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="stock" min="0" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Deskripsi</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Gambar Produk</label>
+                            <input type="file" class="form-control" name="image" accept="image/*" onchange="previewImage(event, 'addPreview')">
+                            <div id="addPreview" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-device-floppy me-1"></i>Simpan Produk
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Produk</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editProductForm" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="product_id" id="editProductId">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Produk <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" id="editName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Kategori <span class="text-danger">*</span></label>
+                            <select class="form-select" name="category_id" id="editCategory" required>
+                                <option value="">Pilih Kategori</option>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Harga <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="price" id="editPrice" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Stok <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="stock" id="editStock" min="0" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Deskripsi</label>
+                            <textarea class="form-control" name="description" id="editDescription" rows="3"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Gambar Produk</label>
+                            <input type="file" class="form-control" name="image" accept="image/*" onchange="previewImage(event, 'editPreview')">
+                            <div id="editCurrentImage" class="mt-2"></div>
+                            <div id="editPreview" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-device-floppy me-1"></i>Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Product Modal -->
+<div class="modal fade" id="viewProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Produk</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <img id="viewImage" src="" alt="" class="img-fluid rounded">
+                    </div>
+                    <div class="col-md-8">
+                        <h4 id="viewName"></h4>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Kategori</small>
+                                <p class="mb-0" id="viewCategory"></p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Harga</small>
+                                <p class="mb-0 fw-bold text-primary" id="viewPrice"></p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <small class="text-muted">Stok</small>
+                                <p class="mb-0" id="viewStock"></p>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted">Total Terjual</small>
+                                <p class="mb-0" id="viewTotalOrders"></p>
+                            </div>
+                        </div>
+                        <div>
+                            <small class="text-muted">Deskripsi</small>
+                            <p id="viewDescription"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(event, previewId) {
+        const file = event.target.files[0];
+        const preview = document.getElementById(previewId);
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" class="img-fluid rounded" style="max-height: 200px;">`;
+            }
+            reader.readAsDataURL(file);
+        } else {
+            preview.innerHTML = '';
+        }
+    }
+
+    function viewProduct(productId) {
+        fetch(`/apotek-alifa/dashboard/admin/product/get_product.php?id=${productId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const product = data.product;
+                    document.getElementById('viewName').textContent = product.name;
+                    document.getElementById('viewCategory').textContent = product.category_name || 'Tidak ada kategori';
+                    document.getElementById('viewPrice').textContent = 'Rp' + new Intl.NumberFormat('id-ID').format(product.price);
+                    document.getElementById('viewStock').innerHTML = product.stock > 20 ?
+                        `<span class="badge bg-success">${product.stock}</span>` :
+                        product.stock > 0 ?
+                        `<span class="badge bg-warning">${product.stock}</span>` :
+                        `<span class="badge bg-danger">Habis</span>`;
+                    document.getElementById('viewTotalOrders').textContent = product.total_orders || '0';
+                    document.getElementById('viewDescription').textContent = product.description || 'Tidak ada deskripsi';
+                    document.getElementById('viewImage').src = '/apotek-alifa/assets/img/product/uploads/' + product.image;
+
+                    new bootstrap.Modal(document.getElementById('viewProductModal')).show();
+                }
+            });
+    }
+
+    function editProduct(productId) {
+        fetch(`/apotek-alifa/dashboard/admin/product/get_product.php?id=${productId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const product = data.product;
+                    document.getElementById('editProductId').value = product.id;
+                    document.getElementById('editName').value = product.name;
+                    document.getElementById('editCategory').value = product.category_id;
+                    document.getElementById('editPrice').value = product.price;
+                    document.getElementById('editStock').value = product.stock;
+                    document.getElementById('editDescription').value = product.description;
+                    document.getElementById('editCurrentImage').innerHTML =
+                        `<small class="text-muted">Gambar saat ini:</small><br>
+                     <img src="/apotek-alifa/assets/img/product/uploads/${product.image}" class="img-fluid rounded" style="max-height: 100px;">`;
+
+                    new bootstrap.Modal(document.getElementById('editProductModal')).show();
+                }
+            });
+    }
+
+    function deleteProduct(productId, productName) {
+        if (confirm(`Apakah Anda yakin ingin menghapus produk "${productName}"?`)) {
+            const formData = new FormData();
+            formData.append('action', 'delete');
+            formData.append('product_id', productId);
+
+            fetch('/apotek-alifa/dashboard/admin/product/ajax_handler.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan. Silakan coba lagi.');
+                });
+        }
+    }
+
+    document.getElementById('addProductForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('/apotek-alifa/dashboard/admin/product/ajax_handler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            });
+    });
+
+    document.getElementById('editProductForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('/apotek-alifa/dashboard/admin/product/ajax_handler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            });
+    });
+</script>
+
+<style>
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .modal-body .row {
+        --bs-gutter-y: 1rem;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+    }
+</style>
