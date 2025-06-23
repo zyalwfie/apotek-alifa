@@ -304,17 +304,12 @@ $conn->close();
                     <?php endif; ?>
 
                 <?php elseif ($order['status'] === 'berhasil'): ?>
-                    <p class="text-muted mb-3">Pesanan sudah disetujui. Anda dapat menandai sebagai selesai:</p>
+                    <p class="text-muted mb-3">Pesanan sudah selesai disetujui.</p>
 
-                    <form method="POST">
-                        <input type="hidden" name="action" value="complete">
-                        <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                        <button type="submit" class="btn btn-primary w-100"
-                            onclick="return confirm('Tandai pesanan sebagai selesai?')">
-                            <i class="ti ti-circle-check me-1"></i>
-                            Tandai Selesai
-                        </button>
-                    </form>
+                    <button type="button" disabled class="btn btn-primary w-100">
+                        <i class="ti ti-circle-check me-1"></i>
+                        Pesanan telah disetujui
+                    </button>
 
                 <?php elseif ($order['status'] === 'gagal'): ?>
                     <div class="alert alert-danger mb-0">

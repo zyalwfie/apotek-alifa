@@ -141,7 +141,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             <div>
                                                 <h6 class="mb-0"><?= htmlspecialchars($order['recipient_name']) ?></h6>
                                                 <small class="text-muted">
-                                                    <i class="ti ti-mail fs-6"></i>
+                                                    <i class="ti ti-mail align-middle"></i>
                                                     <?= htmlspecialchars($order['recipient_email']) ?>
                                                 </small>
                                             </div>

@@ -1,4 +1,5 @@
 <?php
+ob_start();
 require_once '../../auth_functions.php';
 ?>
 <!doctype html>
@@ -40,3 +41,4 @@ require_once '../../auth_functions.php';
 </body>
 
 </html>
+<?php ob_end_flush() ?>
