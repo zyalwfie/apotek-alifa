@@ -6,11 +6,10 @@ require_once '../../order_functions.php';
 requireAdmin();
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$role = isset($_GET['role']) ? trim($_GET['role']) : '';
 $currentPage = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
 $itemsPerPage = 5;
 
-$result = getUsersForAdmin($search, $role, $currentPage, $itemsPerPage);
+$result = getUsersForAdmin($search, 'user', $currentPage, $itemsPerPage);
 $users = $result['users'];
 $totalPages = $result['total_pages'];
 $totalItems = $result['total'];
@@ -42,7 +41,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                     <div>
                         <h4 class="card-title">Manajemen Pengguna</h4>
                         <p class="card-subtitle">
-                            Kelola semua pengguna sistem
+                            Kelola semua pengguna dengan role User
                             <?php if ($totalItems > 0): ?>
                                 <span class="badge bg-primary ms-2"><?= $totalItems ?> pengguna</span>
                             <?php endif; ?>
@@ -50,23 +49,9 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </div>
 
                     <div class="d-flex gap-3 align-items-center">
-                        <!-- Add User Button -->
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                            <i class="ti ti-user-plus me-2"></i>Tambah
-                        </button>
-
-                        <!-- Filter Form -->
                         <form method="get" class="d-flex align-items-center gap-3" id="filterForm">
                             <input type="hidden" name="page" value="user.index">
 
-                            <!-- Role Filter -->
-                            <select class="form-select" name="role" style="min-width: 150px;" onchange="this.form.submit()">
-                                <option value="">Semua Role</option>
-                                <option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Admin</option>
-                                <option value="user" <?= $role === 'user' ? 'selected' : '' ?>>User</option>
-                            </select>
-
-                            <!-- Search Input -->
                             <div class="position-relative">
                                 <input type="text"
                                     class="form-control"
@@ -78,26 +63,21 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     <i class="ti ti-search"></i>
                                 </button>
                             </div>
-                        </form>
 
-                        <?php if (!empty($search) || !empty($role)): ?>
-                            <a href="?page=user.index" class="btn btn-outline-secondary">
-                                <i class="ti ti-x"></i>
-                            </a>
-                        <?php endif; ?>
+                            <?php if (!empty($search)): ?>
+                                <a href="?page=user.index" class="btn btn-outline-secondary">
+                                    <i class="ti ti-x"></i>
+                                </a>
+                            <?php endif; ?>
+                        </form>
                     </div>
                 </div>
 
-                <?php if (!empty($search) || !empty($role)): ?>
+                <?php if (!empty($search)): ?>
                     <div class="alert alert-info">
                         <i class="ti ti-info-circle me-2"></i>
                         Menampilkan <?= count($users) ?> dari <?= $totalItems ?> pengguna
-                        <?php if (!empty($search)): ?>
-                            untuk pencarian "<?= htmlspecialchars($search) ?>"
-                        <?php endif; ?>
-                        <?php if (!empty($role)): ?>
-                            dengan role "<?= ucfirst($role) ?>"
-                        <?php endif; ?>
+                        untuk pencarian "<?= htmlspecialchars($search) ?>"
                     </div>
                 <?php endif; ?>
 
@@ -106,8 +86,8 @@ unset($_SESSION['success'], $_SESSION['error']);
                         <div class="text-center py-5">
                             <i class="ti ti-users-off" style="font-size: 4rem; color: #6c757d;"></i>
                             <h5 class="mt-3 text-muted">Tidak ada pengguna ditemukan</h5>
-                            <?php if (!empty($search) || !empty($role)): ?>
-                                <p class="text-muted">Coba ubah kriteria pencarian atau filter</p>
+                            <?php if (!empty($search)): ?>
+                                <p class="text-muted">Coba ubah kriteria pencarian</p>
                                 <a href="?page=user.index" class="btn btn-outline-primary">Lihat Semua Pengguna</a>
                             <?php endif; ?>
                         </div>
@@ -119,7 +99,6 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     <th scope="col">Avatar</th>
                                     <th scope="col">Pengguna</th>
                                     <th scope="col">Email</th>
-                                    <th scope="col">Role</th>
                                     <th scope="col">Terdaftar</th>
                                     <th scope="col" class="text-end">Aksi</th>
                                 </tr>
@@ -146,27 +125,18 @@ unset($_SESSION['success'], $_SESSION['error']);
                                             <?= htmlspecialchars($user['email']) ?>
                                         </td>
                                         <td>
-                                            <?php if ($user['role'] === 'admin'): ?>
-                                                <span class="badge bg-danger">Admin</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-primary">User</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
                                             <small><?= date('d M Y', strtotime($user['created_at'])) ?></small>
                                         </td>
                                         <td class="text-end">
-                                            <button class="btn btn-sm btn-outline-primary edit-btn"
+                                            <button class="btn btn-sm btn-outline-info view-btn"
                                                 data-user='<?= json_encode($user) ?>'>
-                                                <i class="ti ti-pencil"></i>
+                                                <i class="ti ti-eye"></i>
                                             </button>
-                                            <?php if ($user['id'] != $_SESSION['user_id']): ?>
-                                                <button class="btn btn-sm btn-outline-danger delete-btn"
-                                                    data-id="<?= $user['id'] ?>"
-                                                    data-name="<?= htmlspecialchars($user['username']) ?>">
-                                                    <i class="ti ti-trash"></i>
-                                                </button>
-                                            <?php endif; ?>
+                                            <button class="btn btn-sm btn-outline-danger delete-btn"
+                                                data-id="<?= $user['id'] ?>"
+                                                data-name="<?= htmlspecialchars($user['username']) ?>">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -186,7 +156,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     <ul class="pagination pagination-sm mb-0">
                                         <?php if ($currentPage > 1): ?>
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=user.index&p=<?= $currentPage - 1 ?>&search=<?= urlencode($search) ?>&role=<?= urlencode($role) ?>">
+                                                <a class="page-link" href="?page=user.index&p=<?= $currentPage - 1 ?>&search=<?= urlencode($search) ?>">
                                                     <i class="ti ti-chevron-left"></i>
                                                 </a>
                                             </li>
@@ -199,7 +169,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                                         <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
                                             <li class="page-item <?= $i == $currentPage ? 'active' : '' ?>">
-                                                <a class="page-link" href="?page=user.index&p=<?= $i ?>&search=<?= urlencode($search) ?>&role=<?= urlencode($role) ?>">
+                                                <a class="page-link" href="?page=user.index&p=<?= $i ?>&search=<?= urlencode($search) ?>">
                                                     <?= $i ?>
                                                 </a>
                                             </li>
@@ -207,7 +177,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                                         <?php if ($currentPage < $totalPages): ?>
                                             <li class="page-item">
-                                                <a class="page-link" href="?page=user.index&p=<?= $currentPage + 1 ?>&search=<?= urlencode($search) ?>&role=<?= urlencode($role) ?>">
+                                                <a class="page-link" href="?page=user.index&p=<?= $currentPage + 1 ?>&search=<?= urlencode($search) ?>">
                                                     <i class="ti ti-chevron-right"></i>
                                                 </a>
                                             </li>
@@ -223,96 +193,44 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 </div>
 
-<!-- Add User Modal -->
-<div class="modal fade" id="addUserModal" tabindex="-1">
+<!-- View User Modal -->
+<div class="modal fade" id="viewUserModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Tambah Pengguna Baru</h5>
+                <h5 class="modal-title">Detail Pengguna</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="addUserForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Username <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="username" required>
-                        <small class="text-muted">Minimal 3 karakter, hanya huruf, angka, dan underscore</small>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <img id="viewAvatar" src="" alt="" class="rounded-circle mb-3" width="100" height="100">
+                        <p class="fw-bold mb-1" id="viewUsername"></p>
+                        <span class="badge bg-primary">User</span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nama Lengkap</label>
-                        <input type="text" class="form-control" name="full_name">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password <span class="text-danger">*</span></label>
-                        <input type="password" class="form-control" name="password" required>
-                        <small class="text-muted">Minimal 6 karakter</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select class="form-select" name="role">
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                        </select>
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Nama Lengkap</label>
+                            <p class="mb-0" id="viewFullName">-</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Email</label>
+                            <p class="mb-0" id="viewEmail"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Tanggal Bergabung</label>
+                            <p class="mb-0" id="viewJoinDate"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Total Pesanan</label>
+                            <p class="mb-0" id="viewTotalOrders">0 pesanan</p>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ti ti-user-plus me-1"></i>Tambah Pengguna
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit User Modal -->
-<div class="modal fade" id="editUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Pengguna</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="editUserForm">
-                <input type="hidden" name="id" id="edit_id">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Username <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="username" id="edit_username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" name="email" id="edit_email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nama Lengkap</label>
-                        <input type="text" class="form-control" name="full_name" id="edit_full_name">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password Baru</label>
-                        <input type="password" class="form-control" name="password">
-                        <small class="text-muted">Kosongkan jika tidak ingin mengubah password</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <select class="form-control" name="role" id="edit_role">
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ti ti-device-floppy me-1"></i>Simpan Perubahan
-                    </button>
-                </div>
-            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
         </div>
     </div>
 </div>
@@ -331,94 +249,44 @@ unset($_SESSION['success'], $_SESSION['error']);
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Add User
-        document.getElementById('addUserForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="ti ti-loader me-1"></i>Menyimpan...';
-
-            fetch('/apotek-alifa/user_handler.php?action=add', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(data.message, 'success');
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        showToast(data.message || 'Gagal menambah pengguna', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast('Terjadi kesalahan sistem', 'error');
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="ti ti-user-plus me-1"></i>Tambah Pengguna';
-                });
-        });
-
-        // Edit User
-        document.querySelectorAll('.edit-btn').forEach(btn => {
+        document.querySelectorAll('.view-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const user = JSON.parse(this.getAttribute('data-user'));
 
-                document.getElementById('edit_id').value = user.id;
-                document.getElementById('edit_username').value = user.username;
-                document.getElementById('edit_email').value = user.email;
-                document.getElementById('edit_full_name').value = user.full_name || '';
-                document.getElementById('edit_role').value = user.role;
+                document.getElementById('viewAvatar').src = `/apotek-alifa/assets/img/profile/${user.avatar || 'user-1.svg'}`;
+                document.getElementById('viewUsername').textContent = user.username;
+                document.getElementById('viewFullName').textContent = user.full_name || '-';
+                document.getElementById('viewEmail').textContent = user.email;
 
-                const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+                const joinDate = new Date(user.created_at);
+                document.getElementById('viewJoinDate').textContent = joinDate.toLocaleDateString('id-ID', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                fetch(`/apotek-alifa/get_user_orders.php?user_id=${user.id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('viewTotalOrders').textContent = `${data.total} pesanan`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user orders:', error);
+                    });
+
+                const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
                 modal.show();
             });
         });
 
-        document.getElementById('editUserForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            const submitBtn = this.querySelector('button[type="submit"]');
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="ti ti-loader me-1"></i>Menyimpan...';
-
-            fetch('/apotek-alifa/user_handler.php?action=edit', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(data.message, 'success');
-                        setTimeout(() => location.reload(), 1500);
-                    } else {
-                        showToast(data.message || 'Gagal mengubah pengguna', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast('Terjadi kesalahan sistem', 'error');
-                })
-                .finally(() => {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="ti ti-device-floppy me-1"></i>Simpan Perubahan';
-                });
-        });
-
-        // Delete User
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
                 const name = this.getAttribute('data-name');
 
-                if (confirm(`Apakah Anda yakin ingin menghapus pengguna "${name}"?`)) {
+                if (confirm(`Apakah Anda yakin ingin menghapus pengguna "${name}"?\n\nPerhatian: Tindakan ini tidak dapat dibatalkan!`)) {
                     fetch('/apotek-alifa/user_handler.php?action=delete', {
                             method: 'POST',
                             headers: {
@@ -431,6 +299,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                             if (data.success) {
                                 showToast(data.message, 'success');
                                 document.getElementById(`user-row-${id}`).remove();
+
+                                const tbody = document.querySelector('tbody');
+                                if (!tbody || tbody.children.length === 0) {
+                                    setTimeout(() => location.reload(), 1000);
+                                }
                             } else {
                                 showToast(data.message || 'Gagal menghapus pengguna', 'error');
                             }
@@ -472,5 +345,10 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     .toast {
         min-width: 300px;
+    }
+
+    .modal-body .form-label {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
     }
 </style>

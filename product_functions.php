@@ -11,8 +11,8 @@ function getAllProductsWithPagination($search = '', $category = '', $page = 1, $
     if (!empty($search)) {
         $conditions[] = "(p.name LIKE ? OR p.description LIKE ?)";
         $searchTerm = "%$search%";
-        $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm]);
-        $types .= 'sss';
+        $params = array_merge($params, [$searchTerm, $searchTerm]); // Fixed: only 2 parameters
+        $types .= 'ss'; // Fixed: only 2 types
     }
 
     if (!empty($category)) {
@@ -122,7 +122,7 @@ function addProduct($data, $image_file = null)
 
     $image_name = 'default.jpg';
     if ($image_file && $image_file['error'] === 0) {
-        $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads';
+        $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads/';
         $allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 
         if (in_array($image_file['type'], $allowed_types)) {
@@ -147,7 +147,7 @@ function addProduct($data, $image_file = null)
         $data['description'],
         $data['category_id'],
         $data['price'],
-        $data['stock'],
+        $data['stock']
     );
 
     $success = $stmt->execute();
@@ -169,7 +169,7 @@ function updateProduct($product_id, $data, $image_file = null)
     $image_name = $current['image'];
 
     if ($image_file && $image_file['error'] === 0) {
-        $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads';
+        $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads/';
         $allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
 
         if (in_array($image_file['type'], $allowed_types)) {
@@ -187,12 +187,12 @@ function updateProduct($product_id, $data, $image_file = null)
     }
 
     $query = "UPDATE products 
-              SET image = ?, name = ?, description = ?,category_id = ?, price = ?, stock = ?
+              SET image = ?, name = ?, description = ?, category_id = ?, price = ?, stock = ?
               WHERE id = ?";
 
     $stmt = $conn->prepare($query);
     $stmt->bind_param(
-        "ssdisssi",
+        "sssiiii",
         $image_name,
         $data['name'],
         $data['description'],
@@ -236,7 +236,7 @@ function deleteProduct($product_id)
     $stmt->close();
 
     if ($success && $product && $product['image'] !== 'default.jpg') {
-        $image_path = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/products/' . $product['image'];
+        $image_path = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads/' . $product['image'];
         if (file_exists($image_path)) {
             unlink($image_path);
         }
