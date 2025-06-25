@@ -157,7 +157,6 @@ function getOrderById($order_id, $user_id)
     return $order;
 }
 
-// Fungsi untuk mendapatkan semua pesanan (untuk admin)
 function getAllOrdersWithPagination($search = '', $status = '', $page = 1, $limit = 10)
 {
     $conn = connectDB();
@@ -167,7 +166,6 @@ function getAllOrdersWithPagination($search = '', $status = '', $page = 1, $limi
     $params = [];
     $types = '';
 
-    // Add search condition
     if (!empty($search)) {
         $conditions[] = "(o.recipient_name LIKE ? OR o.recipient_email LIKE ? OR o.recipient_phone LIKE ? OR o.id LIKE ? OR u.username LIKE ?)";
         $searchTerm = "%$search%";
@@ -263,7 +261,6 @@ function getAllOrdersWithPagination($search = '', $status = '', $page = 1, $limi
     ];
 }
 
-// Fungsi untuk mendapatkan order untuk admin (tanpa filter user_id)
 function getOrderByIdForAdmin($order_id)
 {
     $conn = connectDB();
@@ -368,4 +365,153 @@ function requireAdmin()
         header('Location: /apotek-alifa/layouts/dashboard');
         exit;
     }
+}
+
+function getDashboardStats()
+{
+    $conn = connectDB();
+    
+    $query = "SELECT 
+                SUM(CASE WHEN status = 'berhasil' THEN total_price ELSE 0 END) as total_revenue,
+                COUNT(CASE WHEN status = 'tertunda' THEN 1 END) as pending_orders,
+                COUNT(CASE WHEN status = 'berhasil' THEN 1 END) as successful_orders,
+                COUNT(CASE WHEN status = 'gagal' THEN 1 END) as failed_orders,
+                COUNT(*) as total_orders
+              FROM orders";
+    
+    $result = $conn->query($query);
+    $stats = $result->fetch_assoc();
+    
+    $conn->close();
+    
+    return [
+        'total_revenue' => $stats['total_revenue'] ?? 0,
+        'pending_orders' => $stats['pending_orders'] ?? 0,
+        'successful_orders' => $stats['successful_orders'] ?? 0,
+        'failed_orders' => $stats['failed_orders'] ?? 0,
+        'total_orders' => $stats['total_orders'] ?? 0
+    ];
+}
+
+function formatRupiah($amount)
+{
+    return 'Rp' . number_format($amount, 0, ',', '.');
+}
+
+function getRecentOrdersForDashboard($limit = 5)
+{
+    $conn = connectDB();
+    
+    $query = "SELECT o.id,
+                     o.status,
+                     o.total_price,
+                     o.recipient_name,
+                     o.recipient_phone,
+                     o.created_at
+              FROM orders o
+              ORDER BY o.created_at DESC
+              LIMIT ?";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $orders = [];
+    while ($row = $result->fetch_assoc()) {
+        $orders[] = $row;
+    }
+    
+    $stmt->close();
+    $conn->close();
+    
+    return $orders;
+}
+
+function getAdminDashboardStats($user_id)
+{
+    $conn = connectDB();
+    
+    $query = "SELECT 
+                SUM(CASE WHEN status = 'berhasil' THEN total_price ELSE 0 END) as total_spending,
+                COUNT(CASE WHEN status = 'tertunda' THEN 1 END) as pending_orders,
+                COUNT(CASE WHEN status = 'berhasil' THEN 1 END) as successful_orders,
+                COUNT(CASE WHEN status = 'gagal' THEN 1 END) as failed_orders,
+                COUNT(*) as total_orders
+              FROM orders 
+              WHERE user_id = ?";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stats = $result->fetch_assoc();
+    
+    $stmt->close();
+    $conn->close();
+    
+    return [
+        'total_spending' => $stats['total_spending'] ?? 0,
+        'pending_orders' => $stats['pending_orders'] ?? 0,
+        'successful_orders' => $stats['successful_orders'] ?? 0,
+        'failed_orders' => $stats['failed_orders'] ?? 0,
+        'total_orders' => $stats['total_orders'] ?? 0
+    ];
+}
+
+function getUserRecentOrders($user_id, $limit = 5)
+{
+    $conn = connectDB();
+    
+    $query = "SELECT o.id,
+                     o.status,
+                     o.total_price,
+                     o.recipient_name,
+                     o.recipient_phone,
+                     o.created_at
+              FROM orders o
+              WHERE o.user_id = ?
+              ORDER BY o.created_at DESC
+              LIMIT ?";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ii", $user_id, $limit);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $orders = [];
+    while ($row = $result->fetch_assoc()) {
+        $orders[] = $row;
+    }
+    
+    $stmt->close();
+    $conn->close();
+    
+    return $orders;
+}
+
+function getUserDashboardStats()
+{
+    $conn = connectDB();
+    
+    $query = "SELECT 
+                SUM(CASE WHEN status = 'berhasil' THEN total_price ELSE 0 END) as total_spending,
+                COUNT(CASE WHEN status = 'tertunda' THEN 1 END) as pending_orders,
+                COUNT(CASE WHEN status = 'berhasil' THEN 1 END) as successful_orders,
+                COUNT(CASE WHEN status = 'gagal' THEN 1 END) as failed_orders,
+                COUNT(*) as total_orders
+              FROM orders";
+    
+    $result = $conn->query($query);
+    $stats = $result->fetch_assoc();
+    
+    $conn->close();
+    
+    return [
+        'total_spending' => $stats['total_spending'] ?? 0,
+        'pending_orders' => $stats['pending_orders'] ?? 0,
+        'successful_orders' => $stats['successful_orders'] ?? 0,
+        'failed_orders' => $stats['failed_orders'] ?? 0,
+        'total_orders' => $stats['total_orders'] ?? 0
+    ];
 }

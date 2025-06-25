@@ -194,9 +194,9 @@ $products = getData('select * from products limit 4');
                         <i class="fas fa-credit-card"></i>
                     </div>
                     <a href="#" class="stretched-link">
-                        <h3>Pembayaran Mudah & Variatif</h3>
+                        <h3>Pembayaran Mudah via Transfer Bank</h3>
                     </a>
-                    <p>Kami menerima berbagai metode pembayaran — tunai, QRIS, transfer, dan e-wallet biar kamu makin fleksibel dan nyaman saat belanja.</p>
+                    <p>Kami menyediakan metode pembayaran yang aman dan praktis melalui transfer bank. Setelah melakukan pembayaran, Anda cukup mengunggah bukti transfer untuk proses verifikasi yang cepat.</p>
                     <a href="#" class="stretched-link"></a>
                 </div>
             </div><!-- End Service Item -->

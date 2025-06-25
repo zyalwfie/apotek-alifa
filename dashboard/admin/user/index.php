@@ -132,11 +132,6 @@ unset($_SESSION['success'], $_SESSION['error']);
                                                 data-user='<?= json_encode($user) ?>'>
                                                 <i class="ti ti-eye"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-outline-danger delete-btn"
-                                                data-id="<?= $user['id'] ?>"
-                                                data-name="<?= htmlspecialchars($user['username']) ?>">
-                                                <i class="ti ti-trash"></i>
-                                            </button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -235,18 +230,6 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 </div>
 
-<!-- Toast Notification -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3">
-    <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header">
-            <i class="ti ti-bell me-2"></i>
-            <strong class="me-auto">Notifikasi</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-        </div>
-        <div class="toast-body"></div>
-    </div>
-</div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.view-btn').forEach(btn => {
@@ -278,41 +261,6 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                 const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
                 modal.show();
-            });
-        });
-
-        document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const id = this.getAttribute('data-id');
-                const name = this.getAttribute('data-name');
-
-                if (confirm(`Apakah Anda yakin ingin menghapus pengguna "${name}"?\n\nPerhatian: Tindakan ini tidak dapat dibatalkan!`)) {
-                    fetch('/apotek-alifa/user_handler.php?action=delete', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: `id=${id}`
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                showToast(data.message, 'success');
-                                document.getElementById(`user-row-${id}`).remove();
-
-                                const tbody = document.querySelector('tbody');
-                                if (!tbody || tbody.children.length === 0) {
-                                    setTimeout(() => location.reload(), 1000);
-                                }
-                            } else {
-                                showToast(data.message || 'Gagal menghapus pengguna', 'error');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            showToast('Terjadi kesalahan sistem', 'error');
-                        });
-                }
             });
         });
     });

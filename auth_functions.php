@@ -51,7 +51,6 @@ function register($full_name, $username, $email, $password, $confirm_password)
 {
     $conn = connectDB();
 
-    // Validasi input
     if (empty($full_name) || empty($username) || empty($email) || empty($password) || empty($confirm_password)) {
         return ['success' => false, 'message' => 'Semua field harus diisi!'];
     }
@@ -76,7 +75,6 @@ function register($full_name, $username, $email, $password, $confirm_password)
         return ['success' => false, 'message' => 'Nama lengkap minimal 2 karakter!'];
     }
 
-    // Cek apakah username atau email sudah ada
     $checkQuery = "SELECT * FROM users WHERE username = ? OR email = ?";
     $checkStmt = $conn->prepare($checkQuery);
     $checkStmt->bind_param("ss", $username, $email);
@@ -95,11 +93,9 @@ function register($full_name, $username, $email, $password, $confirm_password)
         }
     }
 
-    // Hash password
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-    // Insert user baru dengan avatar default
-    $insertQuery = "INSERT INTO users (full_name, username, email, password, avatar, role, created_at) VALUES (?, ?, ?, ?, 'default.png', 'user', NOW())";
+    $insertQuery = "INSERT INTO users (full_name, username, email, password, avatar, role, created_at) VALUES (?, ?, ?, ?, 'user-1.png', 'user', NOW())";
     $insertStmt = $conn->prepare($insertQuery);
     $insertStmt->bind_param("ssss", $full_name, $username, $email, $hashedPassword);
 
