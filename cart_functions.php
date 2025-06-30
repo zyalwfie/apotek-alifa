@@ -1,31 +1,22 @@
 <?php
-if (!function_exists('connectDB')) {
-    if (file_exists('auth_functions.php')) {
-        require_once 'auth_functions.php';
-    } else {
-        throw new Exception('auth_functions.php not found');
-    }
-}
+require_once 'auth_functions.php';
+require_once 'connect.php';
 
 function addToCart($product_id, $quantity = 1)
 {
+    global $conn;
+    
     try {
         if (!function_exists('isLoggedIn') || !isLoggedIn()) {
             return ['success' => false, 'message' => 'Silakan login terlebih dahulu!'];
         }
 
-        if (!function_exists('connectDB')) {
-            return ['success' => false, 'message' => 'Database connection function not found!'];
-        }
-
-        $conn = connectDB();
         if (!$conn) {
             return ['success' => false, 'message' => 'Gagal koneksi database!'];
         }
 
         $user_id = $_SESSION['user_id'];
 
-        // Get product details dan harga
         $productQuery = "SELECT * FROM products WHERE id = ?";
         $productStmt = $conn->prepare($productQuery);
 
@@ -47,7 +38,6 @@ function addToCart($product_id, $quantity = 1)
         $product = $productResult->fetch_assoc();
         $price_at_add = $product['price'];
 
-        // Check if product already in cart
         $checkQuery = "SELECT * FROM carts WHERE user_id = ? AND product_id = ?";
         $checkStmt = $conn->prepare($checkQuery);
 
@@ -62,7 +52,6 @@ function addToCart($product_id, $quantity = 1)
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            // Update quantity if already exists
             $existingCart = $checkResult->fetch_assoc();
             $newQuantity = $existingCart['quantity'] + $quantity;
 
@@ -92,7 +81,6 @@ function addToCart($product_id, $quantity = 1)
                 return ['success' => false, 'message' => 'Gagal memperbarui keranjang: ' . $updateStmt->error];
             }
         } else {
-            // Add new item to cart
             $insertQuery = "INSERT INTO carts (user_id, product_id, quantity, price_at_add, created_at) VALUES (?, ?, ?, ?, NOW())";
             $insertStmt = $conn->prepare($insertQuery);
 
@@ -126,8 +114,9 @@ function addToCart($product_id, $quantity = 1)
 
 function getCartItems($user_id)
 {
+    global $conn;
+    
     try {
-        $conn = connectDB();
         if (!$conn) {
             return [];
         }
@@ -153,8 +142,8 @@ function getCartItems($user_id)
             $cartItems[] = $row;
         }
 
-        $stmt->close();
-        $conn->close();
+        // $stmt->close();
+        // $conn->close();
 
         return $cartItems;
     } catch (Exception $e) {
@@ -164,12 +153,13 @@ function getCartItems($user_id)
 
 function updateCartQuantity($cart_id, $quantity)
 {
+    global $conn;
+    
     try {
         if (!function_exists('isLoggedIn') || !isLoggedIn()) {
             return ['success' => false, 'message' => 'Silakan login terlebih dahulu!'];
         }
 
-        $conn = connectDB();
         $user_id = $_SESSION['user_id'];
 
         if ($quantity <= 0) {
@@ -181,12 +171,12 @@ function updateCartQuantity($cart_id, $quantity)
         $stmt->bind_param("iii", $quantity, $cart_id, $user_id);
 
         if ($stmt->execute()) {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => true, 'message' => 'Kuantitas berhasil diperbarui!'];
         } else {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Gagal memperbarui kuantitas!'];
         }
     } catch (Exception $e) {
@@ -196,12 +186,13 @@ function updateCartQuantity($cart_id, $quantity)
 
 function removeFromCart($cart_id)
 {
+    global $conn;
+    
     try {
         if (!function_exists('isLoggedIn') || !isLoggedIn()) {
             return ['success' => false, 'message' => 'Silakan login terlebih dahulu!'];
         }
 
-        $conn = connectDB();
         $user_id = $_SESSION['user_id'];
 
         $query = "DELETE FROM carts WHERE id = ? AND user_id = ?";
@@ -209,12 +200,12 @@ function removeFromCart($cart_id)
         $stmt->bind_param("ii", $cart_id, $user_id);
 
         if ($stmt->execute()) {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => true, 'message' => 'Produk berhasil dihapus dari keranjang!'];
         } else {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Gagal menghapus produk dari keranjang!'];
         }
     } catch (Exception $e) {
@@ -224,9 +215,9 @@ function removeFromCart($cart_id)
 
 function getCartTotal($user_id)
 {
+    global $conn;
+    
     try {
-        $conn = connectDB();
-
         $query = "SELECT SUM(c.quantity * c.price_at_add) as total 
                   FROM carts c 
                   WHERE c.user_id = ?";
@@ -237,8 +228,8 @@ function getCartTotal($user_id)
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
 
-        $stmt->close();
-        $conn->close();
+        // $stmt->close();
+        // $conn->close();
 
         return $row['total'] ?? 0;
     } catch (Exception $e) {
@@ -248,6 +239,8 @@ function getCartTotal($user_id)
 
 function getCartCount($user_id = null)
 {
+    global $conn;
+    
     try {
         if (!function_exists('isLoggedIn') || !isLoggedIn()) {
             return 0;
@@ -257,7 +250,6 @@ function getCartCount($user_id = null)
             $user_id = $_SESSION['user_id'];
         }
 
-        $conn = connectDB();
         $query = "SELECT SUM(quantity) as total FROM carts WHERE user_id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("i", $user_id);
@@ -265,8 +257,8 @@ function getCartCount($user_id = null)
         $result = $stmt->get_result();
         $count = $result->fetch_assoc()['total'] ?? 0;
 
-        $stmt->close();
-        $conn->close();
+        // $stmt->close();
+        // $conn->close();
 
         return $count;
     } catch (Exception $e) {
@@ -276,16 +268,16 @@ function getCartCount($user_id = null)
 
 function clearCart($user_id)
 {
+    global $conn;
+    
     try {
-        $conn = connectDB();
-
         $query = "DELETE FROM carts WHERE user_id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("i", $user_id);
 
         $success = $stmt->execute();
-        $stmt->close();
-        $conn->close();
+        // $stmt->close();
+        // $conn->close();
 
         return $success;
     } catch (Exception $e) {

@@ -6,11 +6,11 @@ requireLogin();
 $user_id = $_SESSION['user_id'];
 
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$status = isset($_GET['status']) ? trim($_GET['status']) : '';
+$status_at_approval = isset($_GET['status_at_approval']) ? trim($_GET['status_at_approval']) : '';
 $currentPage = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
 $itemsPerPage = 5;
 
-$result = getUserPendingOrdersWithPagination($user_id, $search, $currentPage, $itemsPerPage);
+$result = getUserOrderHistoryWithPagination($user_id, $search, $currentPage, $itemsPerPage);
 $orders = $result['orders'];
 $totalPages = $result['total_pages'];
 $totalItems = $result['total'];
@@ -23,9 +23,9 @@ $totalItems = $result['total'];
             <div class="card-body">
                 <div class="d-md-flex align-items-center justify-content-between mb-4">
                     <div>
-                        <h4 class="card-title">Daftar Pesanan</h4>
+                        <h4 class="card-title">Daftar Riwayat Pesanan</h4>
                         <p class="card-subtitle">
-                            Semua pesanan yang telah kamu buat
+                            Semua pesanan yang telah kamu pesan
                             <?php if ($totalItems > 0): ?>
                                 <span class="badge bg-primary ms-2"><?= $totalItems ?> pesanan</span>
                             <?php endif; ?>
@@ -35,7 +35,7 @@ $totalItems = $result['total'];
                     <!-- Search and Filter Form -->
                     <div class="d-flex gap-3 align-items-center">
                         <form method="get" class="d-flex align-items-center gap-3" id="filterForm">
-                            <input type="hidden" name="page" value="order.index">
+                            <input type="hidden" name="page" value="order_history.index">
 
                             <!-- Search Input -->
                             <div class="position-relative">
@@ -50,8 +50,8 @@ $totalItems = $result['total'];
                                 </button>
                             </div>
 
-                            <?php if (!empty($search) || !empty($status)): ?>
-                                <a href="?page=order.index" class="btn btn-outline-secondary">
+                            <?php if (!empty($search) || !empty($status_at_approval)): ?>
+                                <a href="?page=order_history.index" class="btn btn-outline-secondary">
                                     <i class="ti ti-x"></i>
                                 </a>
                             <?php endif; ?>
@@ -59,15 +59,15 @@ $totalItems = $result['total'];
                     </div>
                 </div>
 
-                <?php if (!empty($search) || !empty($status)): ?>
+                <?php if (!empty($search) || !empty($status_at_approval)): ?>
                     <div class="alert alert-info">
                         <i class="ti ti-info-circle me-2"></i>
                         Menampilkan <?= count($orders) ?> dari <?= $totalItems ?> pesanan
                         <?php if (!empty($search)): ?>
                             untuk pencarian "<?= htmlspecialchars($search) ?>"
                         <?php endif; ?>
-                        <?php if (!empty($status)): ?>
-                            dengan status "<?= ucfirst($status) ?>"
+                        <?php if (!empty($status_at_approval)): ?>
+                            dengan status_at_approval "<?= ucfirst($status_at_approval) ?>"
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
@@ -78,7 +78,7 @@ $totalItems = $result['total'];
                         <div class="text-center py-5">
                             <i class="ti ti-shopping-cart-off" style="font-size: 4rem; color: #6c757d;"></i>
                             <h5 class="mt-3 text-muted">Tidak ada pesanan ditemukan</h5>
-                            <?php if (!empty($search) || !empty($status)): ?>
+                            <?php if (!empty($search) || !empty($status_at_approval)): ?>
                                 <p class="text-muted">Coba ubah kriteria pencarian atau filter</p>
                                 <a href="?page=order.index" class="btn btn-outline-primary">Lihat Semua Pesanan</a>
                             <?php else: ?>
@@ -135,27 +135,27 @@ $totalItems = $result['total'];
                                                 </small>
                                                 <br>
                                                 <small class="text-muted">
-                                                    <?= date('d M Y', strtotime($order['created_at'])) ?>
+                                                    <?= date('d M Y', strtotime($order['order_created_at'])) ?>
                                                 </small>
                                             </div>
                                         </td>
 
                                         <td class="px-0">
-                                            <?php if ($order['status'] === 'berhasil'): ?>
+                                            <?php if ($order['status_at_approval'] === 'berhasil'): ?>
                                                 <span class="badge bg-success">
                                                     <i class="ti ti-check me-1"></i>Berhasil
                                                 </span>
-                                            <?php elseif ($order['status'] === 'tertunda'): ?>
+                                            <?php elseif ($order['status_at_approval'] === 'tertunda'): ?>
                                                 <span class="badge bg-warning">
                                                     <i class="ti ti-clock me-1"></i>Tertunda
                                                 </span>
-                                            <?php elseif ($order['status'] === 'gagal'): ?>
+                                            <?php elseif ($order['status_at_approval'] === 'gagal'): ?>
                                                 <span class="badge bg-danger">
                                                     <i class="ti ti-x me-1"></i>Gagal
                                                 </span>
                                             <?php else: ?>
                                                 <span class="badge bg-info">
-                                                    <i class="ti ti-info me-1"></i><?= ucfirst($order['status']) ?>
+                                                    <i class="ti ti-info me-1"></i><?= ucfirst($order['status_at_approval']) ?>
                                                 </span>
                                             <?php endif; ?>
                                         </td>
@@ -185,7 +185,7 @@ $totalItems = $result['total'];
                                         <!-- Previous Page -->
                                         <?php if ($currentPage > 1): ?>
                                             <li class="page-item">
-                                                <a class="page-link" href="<?= buildOrderPaginationUrl($currentPage - 1, $search, $status) ?>">
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl($currentPage - 1, $search, $status_at_approval) ?>">
                                                     <i class="ti ti-chevron-left"></i>
                                                 </a>
                                             </li>
@@ -204,7 +204,7 @@ $totalItems = $result['total'];
                                         if ($startPage > 1):
                                         ?>
                                             <li class="page-item">
-                                                <a class="page-link" href="<?= buildOrderPaginationUrl(1, $search, $status) ?>">1</a>
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl(1, $search, $status_at_approval) ?>">1</a>
                                             </li>
                                             <?php if ($startPage > 2): ?>
                                                 <li class="page-item disabled">
@@ -216,7 +216,7 @@ $totalItems = $result['total'];
                                         <!-- Current range of pages -->
                                         <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
                                             <li class="page-item <?= $i == $currentPage ? 'active' : '' ?>">
-                                                <a class="page-link" href="<?= buildOrderPaginationUrl($i, $search, $status) ?>"><?= $i ?></a>
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl($i, $search, $status_at_approval) ?>"><?= $i ?></a>
                                             </li>
                                         <?php endfor; ?>
 
@@ -228,14 +228,14 @@ $totalItems = $result['total'];
                                                 </li>
                                             <?php endif; ?>
                                             <li class="page-item">
-                                                <a class="page-link" href="<?= buildOrderPaginationUrl($totalPages, $search, $status) ?>"><?= $totalPages ?></a>
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl($totalPages, $search, $status_at_approval) ?>"><?= $totalPages ?></a>
                                             </li>
                                         <?php endif; ?>
 
                                         <!-- Next Page -->
                                         <?php if ($currentPage < $totalPages): ?>
                                             <li class="page-item">
-                                                <a class="page-link" href="<?= buildOrderPaginationUrl($currentPage + 1, $search, $status) ?>">
+                                                <a class="page-link" href="<?= buildOrderPaginationUrl($currentPage + 1, $search, $status_at_approval) ?>">
                                                     <i class="ti ti-chevron-right"></i>
                                                 </a>
                                             </li>

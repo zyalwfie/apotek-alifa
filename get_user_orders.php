@@ -8,6 +8,8 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
+require_once 'connect.php';
+
 try {
     require_once 'auth_functions.php';
 
@@ -20,7 +22,6 @@ try {
     }
 
     $userId = intval($_GET['user_id']);
-    $conn = connectDB();
 
     $query = "SELECT COUNT(*) as total FROM orders WHERE user_id = ?";
     $stmt = $conn->prepare($query);
@@ -29,8 +30,8 @@ try {
     $result = $stmt->get_result();
     $total = $result->fetch_assoc()['total'];
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     echo json_encode([
         'success' => true,

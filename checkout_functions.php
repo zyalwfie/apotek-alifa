@@ -1,15 +1,17 @@
 <?php
-// checkout_functions.php
+
 require_once 'auth_functions.php';
 require_once 'cart_functions.php';
+require_once 'connect.php';
 
 function createOrder($orderData)
 {
+    global $conn;
+    
     if (!isLoggedIn()) {
         return ['success' => false, 'message' => 'Silakan login terlebih dahulu!'];
     }
 
-    $conn = connectDB();
     $user_id = $_SESSION['user_id'];
 
     try {
@@ -48,7 +50,7 @@ function createOrder($orderData)
         }
 
         $order_id = $conn->insert_id;
-        $orderStmt->close();
+        // $orderStmt->close();
 
         $orderItemQuery = "INSERT INTO order_items (order_id, product_id, quantity, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
         $orderItemStmt = $conn->prepare($orderItemQuery);
@@ -75,10 +77,10 @@ function createOrder($orderData)
                 throw new Exception('Insufficient stock for product: ' . $item['name']);
             }
 
-            $updateStockStmt->close();
+            // $updateStockStmt->close();
         }
 
-        $orderItemStmt->close();
+        // $orderItemStmt->close();
 
         $paymentQuery = "INSERT INTO payments (order_id, proof_of_payment, created_at, updated_at) VALUES (?, NULL, NOW(), NOW())";
         $paymentStmt = $conn->prepare($paymentQuery);
@@ -91,7 +93,7 @@ function createOrder($orderData)
         if (!$paymentStmt->execute()) {
             throw new Exception('Failed to create payment record: ' . $paymentStmt->error);
         }
-        $paymentStmt->close();
+        // $paymentStmt->close();
 
         if (!clearCart($user_id)) {
             throw new Exception('Failed to clear cart');
@@ -99,7 +101,7 @@ function createOrder($orderData)
 
         $conn->commit();
         $conn->autocommit(true);
-        $conn->close();
+        // $conn->close();
 
         return [
             'success' => true,
@@ -110,7 +112,7 @@ function createOrder($orderData)
     } catch (Exception $e) {
         $conn->rollback();
         $conn->autocommit(true);
-        $conn->close();
+        // $conn->close();
 
         return [
             'success' => false,
@@ -121,11 +123,12 @@ function createOrder($orderData)
 
 function getOrderDetails($order_id)
 {
+    global $conn;
+    
     if (!isLoggedIn()) {
         return null;
     }
 
-    $conn = connectDB();
     $user_id = $_SESSION['user_id'];
 
     $query = "SELECT o.*, 
@@ -146,19 +149,20 @@ function getOrderDetails($order_id)
         $order = $result->fetch_assoc();
     }
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     return $order;
 }
 
 function uploadPaymentProof($order_id, $file)
 {
+    global $conn;
+    
     if (!isLoggedIn()) {
         return ['success' => false, 'message' => 'Silakan login terlebih dahulu!'];
     }
 
-    $conn = connectDB();
     $user_id = $_SESSION['user_id'];
 
     try {
@@ -171,7 +175,7 @@ function uploadPaymentProof($order_id, $file)
         if ($verifyResult->num_rows === 0) {
             throw new Exception('Order not found or access denied');
         }
-        $verifyStmt->close();
+        // $verifyStmt->close();
 
         $uploadDir = '../../assets/img/payments/';
         if (!is_dir($uploadDir)) {
@@ -205,15 +209,15 @@ function uploadPaymentProof($order_id, $file)
             throw new Exception('Failed to update payment record');
         }
 
-        $updateStmt->close();
+        // $updateStmt->close();
 
-        $statusQuery = "UPDATE orders SET status = 'berhasil', updated_at = NOW() WHERE id = ?";
-        $statusStmt = $conn->prepare($statusQuery);
-        $statusStmt->bind_param("i", $order_id);
-        $statusStmt->execute();
-        $statusStmt->close();
+        // $statusQuery = "UPDATE orders SET status = 'berhasil', updated_at = NOW() WHERE id = ?";
+        // $statusStmt = $conn->prepare($statusQuery);
+        // $statusStmt->bind_param("i", $order_id);
+        // $statusStmt->execute();
+        // $statusStmt->close();
 
-        $conn->close();
+        // $conn->close();
 
         return [
             'success' => true,
@@ -221,7 +225,7 @@ function uploadPaymentProof($order_id, $file)
             'filename' => $fileName
         ];
     } catch (Exception $e) {
-        $conn->close();
+        // $conn->close();
         return [
             'success' => false,
             'message' => $e->getMessage()
@@ -231,7 +235,7 @@ function uploadPaymentProof($order_id, $file)
 
 function getUserOrders($user_id, $limit = 10, $offset = 0)
 {
-    $conn = connectDB();
+    global $conn;
 
     $query = "SELECT o.*, 
                      COUNT(oi.id) as item_count,
@@ -254,8 +258,8 @@ function getUserOrders($user_id, $limit = 10, $offset = 0)
         $orders[] = $row;
     }
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     return $orders;
 }
@@ -263,8 +267,8 @@ function getUserOrders($user_id, $limit = 10, $offset = 0)
 function getOrderStatus($status)
 {
     $statuses = [
-        'tertunda' => ['text' => 'Menunggu Pembayaran', 'class' => 'warning', 'icon' => 'clock'],
-        'berhasil' => ['text' => 'Sedang Diproses', 'class' => 'info', 'icon' => 'gear'],
+        'tertunda' => ['text' => 'Tertunda', 'class' => 'warning', 'icon' => 'clock'],
+        'berhasil' => ['text' => 'Berhasil', 'class' => 'info', 'icon' => 'gear'],
         'gagal' => ['text' => 'Dibatalkan', 'class' => 'danger', 'icon' => 'x-circle']
     ];
 

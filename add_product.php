@@ -1,7 +1,7 @@
 <?php
 include 'auth_functions.php';
 
-$conn = connectDB();
+require_once 'connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'add') {
     $name = $_POST['name'];
@@ -51,13 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             $_SESSION['message_type'] = 'danger';
         }
 
-        $stmt->close();
+        // $stmt->close();
     } else {
         $_SESSION['message'] = 'Terjadi kesalahan: ' . $conn->error;
         $_SESSION['message_type'] = 'danger';
     }
 
-    $conn->close();
+    // $conn->close();
 
     header('Location:/apotek-alifa/layouts/dashboard?page=product.index');
     exit();

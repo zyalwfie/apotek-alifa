@@ -308,7 +308,6 @@ $totalItems = $result['total'];
 	function addToCart(productId, productName) {
 		const btn = document.querySelector(`[data-product-id="${productId}"]`);
 
-		// Show loading state
 		btn.classList.add('loading');
 		btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Loading...';
 		btn.disabled = true;

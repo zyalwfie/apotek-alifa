@@ -14,11 +14,11 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
 
             <nav id="navmenu" class="navmenu">
                 <ul>
-                    <li><a href="#hero" class="<?= isset($_GET['page']) ? '' : 'active' ?>">Beranda<br></a></li>
-                    <li><a href="#about">Tentang</a></li>
-                    <li><a href="#services">Layanan</a></li>
-                    <li><a href="#faq">Pertanyaan</a></li>
-                    <li><a href="#contact">Kontak</a></li>
+                    <li><a href="<?= isset($_GET['page']) ? '/apotek-alifa/layouts/landing#hero' : '#hero' ?>" class="<?= isset($_GET['page']) ? '' : 'active' ?>">Beranda<br></a></li>
+                    <li><a href="<?= isset($_GET['page']) ? '/apotek-alifa/layouts/landing#about' : '#about' ?>">Tentang</a></li>
+                    <li><a href="<?= isset($_GET['page']) ? '/apotek-alifa/layouts/landing#services' : '#services' ?>">Layanan</a></li>
+                    <li><a href="<?= isset($_GET['page']) ? '/apotek-alifa/layouts/landing#faq' : '#faq' ?>">Pertanyaan</a></li>
+                    <li><a href="<?= isset($_GET['page']) ? '/apotek-alifa/layouts/landing#contact' : '#contact' ?>">Kontak</a></li>
                     <li><a href="?page=shop" class="<?= isset($_GET['page']) && $_GET['page'] == 'shop' ? 'active' : '' ?>">Produk</a></li>
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -69,6 +69,11 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
                                         <?php if ($cartCount > 0): ?>
                                             <span class="badge bg-primary ms-1"><?= $cartCount ?></span>
                                         <?php endif; ?>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/apotek-alifa/layouts/dashboard/">
+                                        <i class="bi bi-grid-1x2 me-2"></i>Dasbor
                                     </a>
                                 </li>
                             <?php endif; ?>

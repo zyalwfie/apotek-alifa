@@ -12,7 +12,6 @@ if (!$order_id) {
     exit;
 }
 
-// Get order details
 $order = getOrderById($order_id, $user_id);
 
 if (!$order) {
@@ -21,7 +20,6 @@ if (!$order) {
     exit;
 }
 
-// Get order items detail
 $query = "SELECT oi.*, p.name, p.price, p.image 
           FROM order_items oi 
           JOIN products p ON oi.product_id = p.id 
@@ -34,19 +32,13 @@ $order_items = [];
 while ($row = $result->fetch_assoc()) {
     $order_items[] = $row;
 }
-// $stmt->close();
-
-// Get payment info
 $query = "SELECT * FROM payments WHERE order_id = ? ORDER BY created_at DESC LIMIT 1";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $order_id);
 $stmt->execute();
 $payment_result = $stmt->get_result();
 $payment = $payment_result->fetch_assoc();
-// $stmt->close();
-// $conn->close();
 
-// Handle proof of payment upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment'])) {
     $upload_dir = '/apotek-alifa/assets/img/payments/';
     $allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
@@ -57,7 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
         $upload_path = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $file_name;
 
         if (move_uploaded_file($_FILES['proof_of_payment']['tmp_name'], $upload_path)) {
-            // Delete old file if updating
             if ($payment && !empty($payment['proof_of_payment'])) {
                 $old_file = $_SERVER['DOCUMENT_ROOT'] . $upload_dir . $payment['proof_of_payment'];
                 if (file_exists($old_file)) {
@@ -65,14 +56,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
                 }
             }
 
-            // Update payment record
             if ($payment) {
-                // Update existing payment
                 $query = "UPDATE payments SET proof_of_payment = ?, updated_at = NOW() WHERE order_id = ?";
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param("si", $file_name, $order_id);
             } else {
-                // Create new payment record
                 $query = "INSERT INTO payments (order_id, proof_of_payment, created_at) VALUES (?, ?, NOW())";
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param("is", $order_id, $file_name);

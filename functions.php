@@ -1,22 +1,21 @@
 <?php
+require_once 'connect.php';
 
 function getData($query, $params = [])
 {
-    $conn = new mysqli('localhost', 'root', '', 'apotek_alifa');
+    global $conn;
 
     if ($conn->connect_error) {
         die("Koneksi gagal: " . $conn->connect_error);
     }
 
-    // Prepare statement if parameters are provided
     if (!empty($params)) {
         $stmt = $conn->prepare($query);
         if ($stmt) {
-            // Create types string based on parameter count
             $types = str_repeat('s', count($params));
             $stmt->bind_param($types, ...$params);
             $result = $stmt->execute() ? $stmt->get_result() : false;
-            $stmt->close();
+            // $stmt->close();
         } else {
             $result = false;
         }
@@ -32,13 +31,13 @@ function getData($query, $params = [])
         }
     }
 
-    $conn->close();
+    // $conn->close();
     return !empty($data) ? $data : false;
 }
 
 function getProductsWithPagination($search = '', $page = 1, $limit = 12)
 {
-    $conn = new mysqli('localhost', 'root', '', 'apotek_alifa');
+    global $conn;
 
     if ($conn->connect_error) {
         die("Koneksi gagal: " . $conn->connect_error);
@@ -49,7 +48,6 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 12)
     $params = [];
     $types = '';
 
-    // Build search condition
     if (!empty($search)) {
         $searchCondition = "WHERE name LIKE ? OR description LIKE ?";
         $searchTerm = "%$search%";
@@ -57,7 +55,6 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 12)
         $types = 'ss';
     }
 
-    // Get total count for pagination
     $countQuery = "SELECT COUNT(*) as total FROM products $searchCondition";
     if (!empty($params)) {
         $countStmt = $conn->prepare($countQuery);
@@ -65,13 +62,12 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 12)
         $countStmt->execute();
         $countResult = $countStmt->get_result();
         $totalRows = $countResult->fetch_object()->total;
-        $countStmt->close();
+        // $countStmt->close();
     } else {
         $countResult = $conn->query($countQuery);
         $totalRows = $countResult->fetch_object()->total;
     }
 
-    // Get products with pagination
     $query = "SELECT * FROM products $searchCondition ORDER BY name ASC LIMIT ? OFFSET ?";
     $params[] = $limit;
     $params[] = $offset;
@@ -87,12 +83,12 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 12)
         while ($row = $result->fetch_object()) {
             $products[] = $row;
         }
-        $stmt->close();
+        // $stmt->close();
     } else {
         $products = [];
     }
 
-    $conn->close();
+    // $conn->close();
 
     return [
         'products' => $products,
@@ -105,7 +101,7 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 12)
 
 function getProductDetail($product_id)
 {
-    $conn = new mysqli('localhost', 'root', '', 'apotek_alifa');
+    global $conn;
 
     if ($conn->connect_error) {
         die("Koneksi gagal: " . $conn->connect_error);
@@ -122,21 +118,20 @@ function getProductDetail($product_id)
         $product = $result->fetch_object();
     }
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     return $product;
 }
 
 function getRelatedProducts($product_id, $limit = 4)
 {
-    $conn = new mysqli('localhost', 'root', '', 'apotek_alifa');
+    global $conn;
 
     if ($conn->connect_error) {
         die("Koneksi gagal: " . $conn->connect_error);
     }
 
-    // Get related products (excluding current product)
     $query = "SELECT * FROM products WHERE id != ? ORDER BY RAND() LIMIT ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("ii", $product_id, $limit);
@@ -148,8 +143,8 @@ function getRelatedProducts($product_id, $limit = 4)
         $products[] = $row;
     }
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     return $products;
 }

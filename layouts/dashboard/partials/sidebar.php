@@ -79,6 +79,20 @@ $user = getUserData();
                 </a>
             </li>
 
+            <?php if ($user['role'] === 'user') : ?>
+                <li class="sidebar-item">
+                    <a class="sidebar-link justify-content-between <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'order_history.index' || $_GET['page'] === 'order_history.show' ? 'active' : '' ?> <?php endif; ?>"
+                        href="/apotek-alifa/layouts/dashboard?page=order_history.index" aria-expanded="false">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="d-flex">
+                                <i class="ti ti-history"></i>
+                            </span>
+                            <span class="hide-menu">Riwayat Pesanan</span>
+                        </div>
+                    </a>
+                </li>
+            <?php endif; ?>
+
             <li>
                 <span class="sidebar-divider lg"></span>
             </li>
@@ -112,7 +126,7 @@ $user = getUserData();
             </li>
             <li class="sidebar-item">
                 <a class="sidebar-link justify-content-between"
-                    href="/apotek-alifa/logout/php" aria-expanded="false">
+                    href="/apotek-alifa/logout.php" aria-expanded="false">
                     <div class="d-flex align-items-center gap-3">
                         <span class="d-flex">
                             <i class="ti ti-transfer-out"></i>

@@ -3,7 +3,7 @@ require_once 'auth_functions.php';
 
 function getUsersForAdmin($search = '', $role = '', $page = 1, $limit = 10)
 {
-    $conn = connectDB();
+    global $conn;
 
     $offset = ($page - 1) * $limit;
     $conditions = [];
@@ -32,7 +32,7 @@ function getUsersForAdmin($search = '', $role = '', $page = 1, $limit = 10)
         $countStmt->execute();
         $countResult = $countStmt->get_result();
         $totalRows = $countResult->fetch_object()->total;
-        $countStmt->close();
+        // $countStmt->close();
     } else {
         $countResult = $conn->query($countQuery);
         $totalRows = $countResult->fetch_object()->total;
@@ -64,8 +64,8 @@ function getUsersForAdmin($search = '', $role = '', $page = 1, $limit = 10)
         $users[] = $row;
     }
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     return [
         'users' => $users,
@@ -78,7 +78,7 @@ function getUsersForAdmin($search = '', $role = '', $page = 1, $limit = 10)
 
 function addUser($userData)
 {
-    $conn = connectDB();
+    global $conn;
 
     try {
         if (strlen($userData['username']) < 3) {
@@ -104,11 +104,11 @@ function addUser($userData)
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            $checkStmt->close();
-            $conn->close();
+            // $checkStmt->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Username sudah digunakan'];
         }
-        $checkStmt->close();
+        // $checkStmt->close();
 
         $checkQuery = "SELECT id FROM users WHERE email = ?";
         $checkStmt = $conn->prepare($checkQuery);
@@ -117,11 +117,11 @@ function addUser($userData)
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            $checkStmt->close();
-            $conn->close();
+            // $checkStmt->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Email sudah digunakan'];
         }
-        $checkStmt->close();
+        // $checkStmt->close();
 
         $hashedPassword = password_hash($userData['password'], PASSWORD_DEFAULT);
 
@@ -139,23 +139,23 @@ function addUser($userData)
         );
 
         if ($stmt->execute()) {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => true, 'message' => 'Pengguna berhasil ditambahkan'];
         } else {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Gagal menambahkan pengguna'];
         }
     } catch (Exception $e) {
-        $conn->close();
+        // $conn->close();
         return ['success' => false, 'message' => $e->getMessage()];
     }
 }
 
 function updateUser($userId, $userData)
 {
-    $conn = connectDB();
+    global $conn;
 
     try {
         if (strlen($userData['username']) < 3) {
@@ -177,11 +177,11 @@ function updateUser($userId, $userData)
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            $checkStmt->close();
-            $conn->close();
+            // $checkStmt->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Username sudah digunakan'];
         }
-        $checkStmt->close();
+        // $checkStmt->close();
 
         $checkQuery = "SELECT id FROM users WHERE email = ? AND id != ?";
         $checkStmt = $conn->prepare($checkQuery);
@@ -190,11 +190,11 @@ function updateUser($userId, $userData)
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            $checkStmt->close();
-            $conn->close();
+            // $checkStmt->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Email sudah digunakan'];
         }
-        $checkStmt->close();
+        // $checkStmt->close();
 
         if (isset($userData['password']) && !empty($userData['password'])) {
             if (strlen($userData['password']) < 6) {
@@ -227,23 +227,23 @@ function updateUser($userId, $userData)
         }
 
         if ($stmt->execute()) {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => true, 'message' => 'Pengguna berhasil diperbarui'];
         } else {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Gagal memperbarui pengguna'];
         }
     } catch (Exception $e) {
-        $conn->close();
+        // $conn->close();
         return ['success' => false, 'message' => $e->getMessage()];
     }
 }
 
 function deleteUser($userId)
 {
-    $conn = connectDB();
+    global $conn;
 
     try {
         $checkQuery = "SELECT COUNT(*) as count FROM orders WHERE user_id = ?";
@@ -252,10 +252,10 @@ function deleteUser($userId)
         $checkStmt->execute();
         $checkResult = $checkStmt->get_result();
         $orderCount = $checkResult->fetch_assoc()['count'];
-        $checkStmt->close();
+        // $checkStmt->close();
 
         if ($orderCount > 0) {
-            $conn->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Tidak dapat menghapus pengguna yang memiliki riwayat pesanan'];
         }
 
@@ -263,23 +263,23 @@ function deleteUser($userId)
         $deleteCartStmt = $conn->prepare($deleteCartQuery);
         $deleteCartStmt->bind_param("i", $userId);
         $deleteCartStmt->execute();
-        $deleteCartStmt->close();
+        // $deleteCartStmt->close();
 
         $query = "DELETE FROM users WHERE id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("i", $userId);
 
         if ($stmt->execute()) {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => true, 'message' => 'Pengguna berhasil dihapus'];
         } else {
-            $stmt->close();
-            $conn->close();
+            // $stmt->close();
+            // $conn->close();
             return ['success' => false, 'message' => 'Gagal menghapus pengguna'];
         }
     } catch (Exception $e) {
-        $conn->close();
+        // $conn->close();
         return ['success' => false, 'message' => $e->getMessage()];
     }
 }

@@ -1,26 +1,23 @@
 <?php
 require_once 'auth_functions.php';
+require_once 'connect.php';
 
-function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page = 1, $limit = 5)
+function getUserPendingOrdersWithPagination($user_id, $search = '', $page = 1, $limit = 5)
 {
-    $conn = connectDB();
+    global $conn;
 
     $offset = ($page - 1) * $limit;
-    $conditions = ['o.user_id = ?'];
-    $params = [$user_id];
-    $types = 'i';
+
+    $pendingStatus = 'tertunda';
+    $conditions = ['o.user_id = ?', 'o.status = ?'];
+    $params = [$user_id, $pendingStatus];
+    $types = 'is';
 
     if (!empty($search)) {
         $conditions[] = "(o.recipient_name LIKE ? OR o.recipient_email LIKE ? OR o.id LIKE ?)";
         $searchTerm = "%$search%";
         $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm]);
         $types .= 'sss';
-    }
-
-    if (!empty($status)) {
-        $conditions[] = "o.status = ?";
-        $params[] = $status;
-        $types .= 's';
     }
 
     $whereClause = implode(' AND ', $conditions);
@@ -34,19 +31,10 @@ function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page
     $countStmt->execute();
     $countResult = $countStmt->get_result();
     $totalRows = $countResult->fetch_object()->total;
-    $countStmt->close();
 
-    $query = "SELECT o.id,
-                     o.user_id,
-                     o.status,
-                     o.total_price,
-                     o.street_address,
-                     o.recipient_name,
-                     o.recipient_email,
-                     o.recipient_phone,
-                     o.notes,
-                     o.created_at,
-                     o.updated_at,
+    $query = "SELECT o.id, o.user_id, o.status, o.total_price, o.street_address,
+                     o.recipient_name, o.recipient_email, o.recipient_phone,
+                     o.notes, o.created_at, o.updated_at,
                      COUNT(oi.id) as item_count,
                      MAX(p.proof_of_payment) as proof_of_payment,
                      GROUP_CONCAT(CONCAT(pr.name, ' (', oi.quantity, 'x)') SEPARATOR ', ') as items_detail
@@ -55,9 +43,7 @@ function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page
               LEFT JOIN products pr ON oi.product_id = pr.id
               LEFT JOIN payments p ON o.id = p.order_id
               WHERE $whereClause
-              GROUP BY o.id, o.user_id, o.status, o.total_price, o.street_address, 
-                       o.recipient_name, o.recipient_email, o.recipient_phone, 
-                       o.notes, o.created_at, o.updated_at
+              GROUP BY o.id
               ORDER BY o.created_at DESC
               LIMIT ? OFFSET ?";
 
@@ -75,15 +61,84 @@ function getUserOrdersWithPagination($user_id, $search = '', $status = '', $page
         $orders[] = $row;
     }
 
-    $stmt->close();
-    $conn->close();
-
     return [
         'orders' => $orders,
         'total' => $totalRows,
         'total_pages' => ceil($totalRows / $limit),
-        'current_page' => $page,
-        'limit' => $limit
+        'current_page' => (int)$page,
+        'limit' => (int)$limit
+    ];
+}
+
+function getUserOrderHistoryWithPagination($user_id, $search = '', $page = 1, $limit = 5)
+{
+    global $conn;
+    
+    $offset = ($page - 1) * $limit;
+
+    $conditions = ['o.user_id = ?'];
+    $params = [$user_id];
+    $types = 'i';
+
+    if (!empty($search)) {
+        $conditions[] = "(o.recipient_name LIKE ? OR o.recipient_email LIKE ? OR o.order_id LIKE ?)";
+        $searchTerm = "%$search%";
+        $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm]);
+        $types .= 'sss';
+    }
+
+    $whereClause = implode(' AND ', $conditions);
+
+    $countQuery = "SELECT COUNT(*) as total 
+                   FROM order_histories o 
+                   WHERE $whereClause";
+
+    $countStmt = $conn->prepare($countQuery);
+    $countStmt->bind_param($types, ...$params);
+    $countStmt->execute();
+    $countResult = $countStmt->get_result();
+    $totalRows = $countResult->fetch_object()->total;
+    $countStmt->close();
+
+
+    $query = "SELECT o.id, o.order_id, o.user_id, o.status_at_approval,
+                     o.total_price, o.street_address,
+                     o.recipient_name, o.recipient_email, o.recipient_phone,
+                     o.notes, o.order_created_at, o.approved_at,
+                     o.items_snapshot,
+                     JSON_LENGTH(o.items_snapshot) as item_count
+              FROM order_histories o
+              WHERE $whereClause
+              ORDER BY o.approved_at DESC
+              LIMIT ? OFFSET ?";
+
+    $params[] = $limit;
+    $params[] = $offset;
+    $types .= 'ii';
+
+    $stmt = $conn->prepare($query);
+    if ($stmt === false) {
+        error_log('Prepare statement gagal untuk getUserOrderHistory: ' . $conn->error);
+        return false;
+    }
+
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $orders = [];
+    while ($row = $result->fetch_assoc()) {
+        $row['items_snapshot'] = json_decode($row['items_snapshot'], true);
+        $orders[] = $row;
+    }
+    $stmt->close();
+
+    return [
+        'orders' => $orders,
+        'total' => (int)$totalRows,
+        'total_pages' => ceil($totalRows / $limit),
+        'current_page' => (int)$page,
+        'limit' => (int)$limit
     ];
 }
 
@@ -117,7 +172,7 @@ function formatOrderDate($date)
 
 function getOrderById($order_id, $user_id)
 {
-    $conn = connectDB();
+    global $conn;
 
     $query = "SELECT o.id,
                      o.user_id,
@@ -151,15 +206,13 @@ function getOrderById($order_id, $user_id)
         $order = $result->fetch_assoc();
     }
 
-    $stmt->close();
-    $conn->close();
 
     return $order;
 }
 
 function getAllOrdersWithPagination($search = '', $status = '', $page = 1, $limit = 10)
 {
-    $conn = connectDB();
+    global $conn;
 
     $offset = ($page - 1) * $limit;
     $conditions = [];
@@ -198,7 +251,6 @@ function getAllOrdersWithPagination($search = '', $status = '', $page = 1, $limi
     }
 
     $totalRows = $countResult->fetch_object()->total;
-    if (isset($countStmt)) $countStmt->close();
 
     // Get orders with items count and payment info
     $query = "SELECT o.id,
@@ -249,8 +301,6 @@ function getAllOrdersWithPagination($search = '', $status = '', $page = 1, $limi
         $orders[] = $row;
     }
 
-    $stmt->close();
-    $conn->close();
 
     return [
         'orders' => $orders,
@@ -263,7 +313,7 @@ function getAllOrdersWithPagination($search = '', $status = '', $page = 1, $limi
 
 function getOrderByIdForAdmin($order_id)
 {
-    $conn = connectDB();
+    global $conn;
 
     $query = "SELECT o.id,
                      o.user_id,
@@ -298,15 +348,13 @@ function getOrderByIdForAdmin($order_id)
         $order = $result->fetch_assoc();
     }
 
-    $stmt->close();
-    $conn->close();
 
     return $order;
 }
 
 function updateOrderStatus($order_id, $status, $admin_id)
 {
-    $conn = connectDB();
+    global $conn;
 
     $conn->begin_transaction();
 
@@ -316,28 +364,63 @@ function updateOrderStatus($order_id, $status, $admin_id)
         $stmt->bind_param("si", $status, $order_id);
         $stmt->execute();
 
-        $log_query = "INSERT INTO order_status_logs (order_id, status, changed_by, created_at) VALUES (?, ?, ?, NOW())";
-        $log_stmt = $conn->prepare($log_query);
-        $log_stmt->bind_param("isi", $order_id, $status, $admin_id);
-        $log_stmt->execute();
+        $order_details_query = "SELECT * FROM orders WHERE id = ?";
+        $order_stmt = $conn->prepare($order_details_query);
+        $order_stmt->bind_param("i", $order_id);
+        $order_stmt->execute();
+        $order_data = $order_stmt->get_result()->fetch_assoc();
+
+        $items_query = "SELECT oi.quantity, p.name 
+                            FROM order_items oi 
+                            JOIN products p ON oi.product_id = p.id 
+                            WHERE oi.order_id = ?";
+        $items_stmt = $conn->prepare($items_query);
+        $items_stmt->bind_param("i", $order_id);
+        $items_stmt->execute();
+        $items_result = $items_stmt->get_result();
+
+        $items_snapshot = [];
+        while ($item_row = $items_result->fetch_assoc()) {
+            $items_snapshot[] = $item_row;
+        }
+
+        $items_json = json_encode($items_snapshot);
+
+        $history_query = "INSERT INTO order_histories (order_id, user_id, admin_id_approved, status_at_approval, total_price, street_address, recipient_name, recipient_email, recipient_phone, notes, items_snapshot, order_created_at) 
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $history_stmt = $conn->prepare($history_query);
+        $history_stmt->bind_param(
+            "iiisssssssss",
+            $order_data['id'],
+            $order_data['user_id'],
+            $admin_id,
+            $status,
+            $order_data['total_price'],
+            $order_data['street_address'],
+            $order_data['recipient_name'],
+            $order_data['recipient_email'],
+            $order_data['recipient_phone'],
+            $order_data['notes'],
+            $items_json,
+            $order_data['created_at']
+        );
+        $history_stmt->execute();
 
         $conn->commit();
 
-        $stmt->close();
-        if (isset($log_stmt)) $log_stmt->close();
-        $conn->close();
-
         return true;
     } catch (Exception $e) {
+        echo $e;
+
         $conn->rollback();
-        $conn->close();
+
         return false;
     }
 }
 
 function isAdmin($user_id)
 {
-    $conn = connectDB();
+    global $conn;
     $query = "SELECT role FROM users WHERE id = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $user_id);
@@ -350,8 +433,6 @@ function isAdmin($user_id)
         $is_admin = ($user['role'] === 'admin');
     }
 
-    $stmt->close();
-    $conn->close();
 
     return $is_admin;
 }
@@ -369,8 +450,8 @@ function requireAdmin()
 
 function getDashboardStats()
 {
-    $conn = connectDB();
-    
+    global $conn;
+
     $query = "SELECT 
                 SUM(CASE WHEN status = 'berhasil' THEN total_price ELSE 0 END) as total_revenue,
                 COUNT(CASE WHEN status = 'tertunda' THEN 1 END) as pending_orders,
@@ -378,12 +459,11 @@ function getDashboardStats()
                 COUNT(CASE WHEN status = 'gagal' THEN 1 END) as failed_orders,
                 COUNT(*) as total_orders
               FROM orders";
-    
+
     $result = $conn->query($query);
     $stats = $result->fetch_assoc();
-    
-    $conn->close();
-    
+
+
     return [
         'total_revenue' => $stats['total_revenue'] ?? 0,
         'pending_orders' => $stats['pending_orders'] ?? 0,
@@ -400,8 +480,8 @@ function formatRupiah($amount)
 
 function getRecentOrdersForDashboard($limit = 5)
 {
-    $conn = connectDB();
-    
+    global $conn;
+
     $query = "SELECT o.id,
                      o.status,
                      o.total_price,
@@ -411,27 +491,25 @@ function getRecentOrdersForDashboard($limit = 5)
               FROM orders o
               ORDER BY o.created_at DESC
               LIMIT ?";
-    
+
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $limit);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     $orders = [];
     while ($row = $result->fetch_assoc()) {
         $orders[] = $row;
     }
-    
-    $stmt->close();
-    $conn->close();
-    
+
+
     return $orders;
 }
 
 function getAdminDashboardStats($user_id)
 {
-    $conn = connectDB();
-    
+    global $conn;
+
     $query = "SELECT 
                 SUM(CASE WHEN status = 'berhasil' THEN total_price ELSE 0 END) as total_spending,
                 COUNT(CASE WHEN status = 'tertunda' THEN 1 END) as pending_orders,
@@ -440,16 +518,14 @@ function getAdminDashboardStats($user_id)
                 COUNT(*) as total_orders
               FROM orders 
               WHERE user_id = ?";
-    
+
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $stats = $result->fetch_assoc();
-    
-    $stmt->close();
-    $conn->close();
-    
+
+
     return [
         'total_spending' => $stats['total_spending'] ?? 0,
         'pending_orders' => $stats['pending_orders'] ?? 0,
@@ -461,8 +537,8 @@ function getAdminDashboardStats($user_id)
 
 function getUserRecentOrders($user_id, $limit = 5)
 {
-    $conn = connectDB();
-    
+    global $conn;
+
     $query = "SELECT o.id,
                      o.status,
                      o.total_price,
@@ -473,27 +549,25 @@ function getUserRecentOrders($user_id, $limit = 5)
               WHERE o.user_id = ?
               ORDER BY o.created_at DESC
               LIMIT ?";
-    
+
     $stmt = $conn->prepare($query);
     $stmt->bind_param("ii", $user_id, $limit);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     $orders = [];
     while ($row = $result->fetch_assoc()) {
         $orders[] = $row;
     }
-    
-    $stmt->close();
-    $conn->close();
-    
+
+
     return $orders;
 }
 
 function getUserDashboardStats()
 {
-    $conn = connectDB();
-    
+    global $conn;
+
     $query = "SELECT 
                 SUM(CASE WHEN status = 'berhasil' THEN total_price ELSE 0 END) as total_spending,
                 COUNT(CASE WHEN status = 'tertunda' THEN 1 END) as pending_orders,
@@ -501,12 +575,11 @@ function getUserDashboardStats()
                 COUNT(CASE WHEN status = 'gagal' THEN 1 END) as failed_orders,
                 COUNT(*) as total_orders
               FROM orders";
-    
+
     $result = $conn->query($query);
     $stats = $result->fetch_assoc();
-    
-    $conn->close();
-    
+
+
     return [
         'total_spending' => $stats['total_spending'] ?? 0,
         'pending_orders' => $stats['pending_orders'] ?? 0,

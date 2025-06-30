@@ -121,7 +121,7 @@ if ($order_id > 0) {
                         </a>
                     <?php endif; ?>
 
-                    <a href="?page=orders" class="btn btn-outline-primary btn-lg me-md-2">
+                    <a href="/apotek-alifa/layouts/dashboard" class="btn btn-outline-primary btn-lg me-md-2">
                         <i class="bi bi-list-ul me-2"></i>Lihat Semua Pesanan
                     </a>
 
@@ -210,12 +210,10 @@ if ($order_id > 0) {
 </style>
 
 <script>
-    // Auto-scroll to top on page load
     window.addEventListener('load', function() {
         window.scrollTo(0, 0);
     });
 
-    // Confetti effect (optional)
     function createConfetti() {
         const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7'];
         const confettiCount = 50;
@@ -254,6 +252,5 @@ if ($order_id > 0) {
         }
     }
 
-    // Trigger confetti on page load (optional)
     setTimeout(createConfetti, 500);
 </script>

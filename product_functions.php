@@ -1,7 +1,7 @@
 <?php
 function getAllProductsWithPagination($search = '', $category = '', $page = 1, $limit = 5)
 {
-    $conn = connectDB();
+    global $conn;
 
     $offset = ($page - 1) * $limit;
     $conditions = [];
@@ -35,7 +35,7 @@ function getAllProductsWithPagination($search = '', $category = '', $page = 1, $
     }
 
     $totalRows = $countResult->fetch_object()->total;
-    if (isset($countStmt)) $countStmt->close();
+    // if (isset($countStmt)) $countStmt->close();
 
     $query = "SELECT p.*, c.name as category_name,
               (SELECT COUNT(*) FROM order_items WHERE product_id = p.id) as total_orders
@@ -65,8 +65,8 @@ function getAllProductsWithPagination($search = '', $category = '', $page = 1, $
         $products[] = $row;
     }
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     return [
         'products' => $products,
@@ -79,7 +79,7 @@ function getAllProductsWithPagination($search = '', $category = '', $page = 1, $
 
 function getProductById($product_id)
 {
-    $conn = connectDB();
+    global $conn;
 
     $query = "SELECT p.*, c.name as category_name
               FROM products p
@@ -93,15 +93,15 @@ function getProductById($product_id)
 
     $product = $result->fetch_assoc();
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     return $product;
 }
 
 function getAllCategories()
 {
-    $conn = connectDB();
+    global $conn;
 
     $query = "SELECT * FROM categories ORDER BY name ASC";
     $result = $conn->query($query);
@@ -111,14 +111,14 @@ function getAllCategories()
         $categories[] = $row;
     }
 
-    $conn->close();
+    // $conn->close();
 
     return $categories;
 }
 
 function addProduct($data, $image_file = null)
 {
-    $conn = connectDB();
+    global $conn;
 
     $image_name = 'default.jpg';
     if ($image_file && $image_file['error'] === 0) {
@@ -153,15 +153,15 @@ function addProduct($data, $image_file = null)
     $success = $stmt->execute();
     $product_id = $conn->insert_id;
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     return $success ? $product_id : false;
 }
 
 function updateProduct($product_id, $data, $image_file = null)
 {
-    $conn = connectDB();
+    global $conn;
 
     $current = getProductById($product_id);
     if (!$current) return false;
@@ -204,15 +204,15 @@ function updateProduct($product_id, $data, $image_file = null)
 
     $success = $stmt->execute();
 
-    $stmt->close();
-    $conn->close();
+    // $stmt->close();
+    // $conn->close();
 
     return $success;
 }
 
 function deleteProduct($product_id)
 {
-    $conn = connectDB();
+    global $conn;
 
     $check_query = "SELECT COUNT(*) as count FROM order_items WHERE product_id = ?";
     $check_stmt = $conn->prepare($check_query);
@@ -220,10 +220,10 @@ function deleteProduct($product_id)
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $count = $result->fetch_object()->count;
-    $check_stmt->close();
+    // $check_stmt->close();
 
     if ($count > 0) {
-        $conn->close();
+        // $conn->close();
         return ['success' => false, 'message' => 'Produk tidak dapat dihapus karena sudah memiliki pesanan'];
     }
 
@@ -233,7 +233,7 @@ function deleteProduct($product_id)
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $product_id);
     $success = $stmt->execute();
-    $stmt->close();
+    // $stmt->close();
 
     if ($success && $product && $product['image'] !== 'default.jpg') {
         $image_path = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads/' . $product['image'];
@@ -242,7 +242,7 @@ function deleteProduct($product_id)
         }
     }
 
-    $conn->close();
+    // $conn->close();
 
     return ['success' => $success, 'message' => $success ? 'Produk berhasil dihapus' : 'Gagal menghapus produk'];
 }

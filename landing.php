@@ -24,7 +24,7 @@ $products = getData('select * from products limit 4');
                         Apotek Alifa hadir sebagai solusi praktis untuk kebutuhan obat-obatanmu. Kami menyediakan layanan pembelian obat secara online yang cepat, aman, dan terpercaya. Tanpa antre, tanpa ribet, cukup pesan dari rumah dan kami yang antar. Yuk, jaga kesehatan lebih mudah bareng Apotek Alifa!
                     </p>
                     <div class="text-center">
-                        <a href="shop.php" class="more-btn"><span>Lihat Obat</span> <i class="bi bi-chevron-right"></i></a>
+                        <a href="/apotek-alifa/layouts/landing?page=shop" class="more-btn"><span>Lihat Obat</span> <i class="bi bi-chevron-right"></i></a>
                     </div>
                 </div>
             </div><!-- End Why Box -->

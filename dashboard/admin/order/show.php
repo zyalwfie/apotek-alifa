@@ -1,5 +1,6 @@
 <?php
 require_once '../../order_functions.php';
+require_once '../../connect.php';
 
 requireAdmin();
 
@@ -46,7 +47,6 @@ if (!$order) {
     exit;
 }
 
-$conn = connectDB();
 $query = "SELECT oi.*, p.name, p.price, p.image 
           FROM order_items oi 
           JOIN products p ON oi.product_id = p.id 
@@ -329,7 +329,7 @@ $conn->close();
                 <div class="d-grid gap-2">
                     <a href="?page=order.index" class="btn btn-secondary">
                         <i class="ti ti-arrow-left me-1"></i>
-                        Kembali ke Daftar
+                        Kembali ke Daftar Pesanan
                     </a>
                 </div>
             </div>

@@ -1,7 +1,6 @@
 <?php
 include 'auth_functions.php';
-
-$conn = connectDB();
+require 'connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['product_id'])) {
     $product_id = $_POST['product_id'];
@@ -24,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['product_id'])) {
             header('Location:/apotek-alifa/layouts/dashboard?page=product.index');
             exit();
         }
-        $stmt->close();
+        // $stmt->close();
     }
 
     $image = $old_image;
@@ -70,13 +69,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['product_id'])) {
             $_SESSION['message_type'] = 'danger';
         }
 
-        $stmt->close();
+        // $stmt->close();
     } else {
         $_SESSION['message'] = 'Terjadi kesalahan saat memperbarui produk.';
         $_SESSION['message_type'] = 'danger';
     }
 
-    $conn->close();
+    // $conn->close();
 
     header('Location:/apotek-alifa/layouts/dashboard?page=product.index');
     exit();

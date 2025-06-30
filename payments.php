@@ -1,10 +1,8 @@
 <?php
 require_once 'checkout_functions.php';
 
-// Check if user is logged in
 requireLogin();
 
-// Get order ID from URL or session
 $order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : ($_SESSION['last_order_id'] ?? 0);
 
 if ($order_id <= 0) {
@@ -12,14 +10,12 @@ if ($order_id <= 0) {
     exit;
 }
 
-// Get order details
 $order = getOrderDetails($order_id);
 if (!$order) {
     header('Location: ?page=shop');
     exit;
 }
 
-// Handle payment proof upload
 $error = '';
 $success = '';
 
@@ -28,7 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['buktiPembayaran'])) 
 
     if ($result['success']) {
         $success = $result['message'];
-        // Redirect to thank you page after 2 seconds
         header("refresh:2;url=?page=thanks&order_id=$order_id");
     } else {
         $error = $result['message'];
@@ -192,6 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['buktiPembayaran'])) 
                 </div>
             </div>
         </div>
+        
     </div>
 </section>
 
@@ -249,27 +245,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['buktiPembayaran'])) 
             return;
         }
 
-        // Check file size (5MB = 5 * 1024 * 1024 bytes)
         if (fileInput.files[0].size > 5 * 1024 * 1024) {
             e.preventDefault();
             alert('Ukuran file terlalu besar! Maksimal 5MB.');
             return;
         }
 
-        // Show loading state
         uploadBtn.classList.add('loading');
         uploadBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Mengupload...';
         uploadBtn.disabled = true;
     });
 
-    // File input preview
     document.getElementById('buktiPembayaran').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
             const fileSize = (file.size / 1024 / 1024).toFixed(2);
             const fileName = file.name;
 
-            // Show file info
             let fileInfo = document.querySelector('.file-info');
             if (!fileInfo) {
                 fileInfo = document.createElement('div');

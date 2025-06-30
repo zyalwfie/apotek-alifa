@@ -1,5 +1,6 @@
 <?php
 require_once '../../auth_functions.php';
+require_once '../../connect.php';
 
 requireLogin();
 
@@ -33,8 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors)) {
-        $conn = connectDB();
-
         if ($username !== $user['username']) {
             $check_username = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
             $check_username->bind_param("si", $username, $user_id);
