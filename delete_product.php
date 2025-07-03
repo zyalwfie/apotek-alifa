@@ -5,7 +5,7 @@ require_once 'connect.php';
 if (isset($_POST['product_id'])) {
     $product_id = $_POST['product_id'];
 
-    $sql = "SELECT image FROM products WHERE id = ?";
+    $sql = "SELECT gambar FROM obat WHERE id = ?";
     if ($stmt = $conn->prepare($sql)) {
         $stmt->bind_param("i", $product_id);
         $stmt->execute();
@@ -19,7 +19,6 @@ if (isset($_POST['product_id'])) {
             header('Location:/apotek-alifa/layouts/dashboard?page=product.index');
             exit();
         }
-        // $stmt->close();
     } else {
         $_SESSION['message'] = 'Terjadi kesalahan saat mengambil data produk.';
         $_SESSION['message_type'] = 'danger';
@@ -35,7 +34,7 @@ if (isset($_POST['product_id'])) {
         }
     }
 
-    $sql = "DELETE FROM products WHERE id = ?";
+    $sql = "DELETE FROM obat WHERE id = ?";
     if ($stmt = $conn->prepare($sql)) {
         $stmt->bind_param("i", $product_id);
 
@@ -46,15 +45,11 @@ if (isset($_POST['product_id'])) {
             $_SESSION['message'] = 'Terjadi kesalahan saat menghapus produk.';
             $_SESSION['message_type'] = 'danger';
         }
-
-        // $stmt->close();
     } else {
         $_SESSION['message'] = 'Terjadi kesalahan saat menghapus produk.';
         $_SESSION['message_type'] = 'danger';
     }
-
-    // $conn->close();
-
+    
     header('Location:/apotek-alifa/layouts/dashboard?page=product.index');
     exit();
 } else {

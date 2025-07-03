@@ -8,9 +8,9 @@ $user_id = $_SESSION['user_id'];
 $user = getUserData($user_id);
 
 $errors = [];
-$full_name = $user['full_name'] ?: '';
-$username = $user['username'];
-$email = $user['email'];
+$full_name = $user['nama_lengkap'] ?: '';
+$username = $user['nama_pengguna'];
+$email = $user['surel'];
 $avatar = $user['avatar'] ?: 'user-1.svg';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -35,8 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errors)) {
 
-        if ($username !== $user['username']) {
-            $check_username = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
+        if ($username !== $user['nama_pengguna']) {
+            $check_username = $conn->prepare("SELECT id FROM pengguna WHERE nama_pengguna = ? AND id != ?");
             $check_username->bind_param("si", $username, $user_id);
             $check_username->execute();
             if ($check_username->get_result()->num_rows > 0) {
@@ -45,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $check_username->close();
         }
 
-        if ($email !== $user['email']) {
-            $check_email = $conn->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
+        if ($email !== $user['surel']) {
+            $check_email = $conn->prepare("SELECT id FROM pengguna WHERE surel = ? AND id != ?");
             $check_email->bind_param("si", $email, $user_id);
             $check_email->execute();
             if ($check_email->get_result()->num_rows > 0) {
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (empty($errors)) {
-            $update_query = "UPDATE users SET full_name = ?, username = ?, email = ?, avatar = ? WHERE id = ?";
+            $update_query = "UPDATE pengguna SET nama_lengkap = ?, nama_pengguna = ?, surel = ?, avatar = ? WHERE id = ?";
             $update_stmt = $conn->prepare($update_query);
             $update_stmt->bind_param("ssssi", $full_name, $username, $email, $avatar, $user_id);
 

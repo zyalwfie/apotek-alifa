@@ -11,14 +11,14 @@ if ($product_id <= 0) {
     exit;
 }
 
-$product = getData("SELECT * FROM products WHERE id = ?", [$product_id]);
+$product = getData("SELECT * FROM obat WHERE id = ?", [$product_id]);
 if (!$product) {
     header('Location: ?page=shop');
     exit;
 }
 $product = $product[0];
 
-$related_query = "SELECT * FROM products WHERE id != ? ORDER BY RAND() LIMIT 4";
+$related_query = "SELECT * FROM obat WHERE id != ? ORDER BY RAND() LIMIT 4";
 $related_products = getData($related_query, [$product_id]) ?: [];
 ?>
 
@@ -29,13 +29,13 @@ $related_products = getData($related_query, [$product_id]) ?: [];
             <div class="col-md-6">
                 <div class="position-relative">
                     <img class="card-img-top mb-5 mb-md-0 rounded shadow"
-                        src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($product->image) ?>"
-                        alt="<?= htmlspecialchars($product->name) ?>"
+                        src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($product->gambar) ?>"
+                        alt="<?= htmlspecialchars($product->nama_obat) ?>"
                         style="width: 100%; height: 400px; object-fit: cover;" />
 
                     <!-- Stock badge -->
-                    <?php if (isset($product->stock)): ?>
-                        <?php if ($product->stock > 0): ?>
+                    <?php if (isset($product->stok)): ?>
+                        <?php if ($product->stok > 0): ?>
                             <div class="badge bg-success position-absolute" style="top: 1rem; left: 1rem">
                                 <i class="bi bi-check-circle me-1"></i>Tersedia
                             </div>
@@ -54,45 +54,45 @@ $related_products = getData($related_query, [$product_id]) ?: [];
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="/apotek-alifa/layouts/landing/" class="text-decoration-none">Beranda</a></li>
                         <li class="breadcrumb-item"><a href="?page=shop" class="text-decoration-none">Produk</a></li>
-                        <li class="breadcrumb-item active" aria-current="page"><?= htmlspecialchars($product->name) ?></li>
+                        <li class="breadcrumb-item active" aria-current="page"><?= htmlspecialchars($product->nama_obat) ?></li>
                     </ol>
                 </nav>
 
                 <!-- Product category -->
-                <?php if (isset($product->category)): ?>
+                <?php if (isset($product->kategori)): ?>
                     <div class="small mb-2 text-muted">
                         <i class="bi bi-tag me-1"></i>
-                        <?= htmlspecialchars($product->category) ?>
+                        <?= htmlspecialchars($product->kategori) ?>
                     </div>
                 <?php endif; ?>
 
                 <!-- Product name -->
-                <h1 class="display-6 fw-bolder mb-3"><?= htmlspecialchars($product->name) ?></h1>
+                <h1 class="display-6 fw-bolder mb-3"><?= htmlspecialchars($product->nama_obat) ?></h1>
 
                 <!-- Product price -->
                 <div class="fs-4 mb-4">
-                    <span class="text-primary fw-bold">Rp<?= number_format($product->price, 0, '.', ',') ?></span>
-                    <?php if (isset($product->original_price) && $product->original_price > $product->price): ?>
+                    <span class="text-primary fw-bold">Rp<?= number_format($product->harga, 0, '.', ',') ?></span>
+                    <?php if (isset($product->original_price) && $product->original_price > $product->harga): ?>
                         <span class="text-muted text-decoration-line-through ms-2">
                             Rp<?= number_format($product->original_price, 0, '.', ',') ?>
                         </span>
                         <span class="badge bg-danger ms-2">
-                            <?= round((($product->original_price - $product->price) / $product->original_price) * 100) ?>% OFF
+                            <?= round((($product->original_price - $product->harga) / $product->original_price) * 100) ?>% OFF
                         </span>
                     <?php endif; ?>
                 </div>
 
                 <!-- Product description -->
-                <?php if (!empty($product->description)): ?>
-                    <p class="lead mb-4"><?= nl2br(htmlspecialchars($product->description)) ?></p>
+                <?php if (!empty($product->deskripsi)): ?>
+                    <p class="lead mb-4"><?= nl2br(htmlspecialchars($product->deskripsi)) ?></p>
                 <?php endif; ?>
 
                 <!-- Product specifications -->
                 <div class="mb-4">
                     <h6 class="fw-bold">Spesifikasi Produk:</h6>
                     <ul class="list-unstyled">
-                        <?php if (isset($product->stock)): ?>
-                            <li><i class="bi bi-box me-2 text-primary"></i>Stok: <span class="fw-bold"><?= $product->stock ?> unit</span></li>
+                        <?php if (isset($product->stok)): ?>
+                            <li><i class="bi bi-box me-2 text-primary"></i>Stok: <span class="fw-bold"><?= $product->stok ?> unit</span></li>
                         <?php endif; ?>
                         <?php if (isset($product->weight)): ?>
                             <li><i class="bi bi-weight me-2 text-primary"></i>Berat: <?= $product->weight ?>g</li>
@@ -105,7 +105,7 @@ $related_products = getData($related_query, [$product_id]) ?: [];
                     </ul>
                 </div>
 
-                <?php if ($user['role'] === 'user') : ?>
+                <?php if ($user['peran'] === 'user') : ?>
                     <!-- Add to cart section -->
                     <div class="card border-0 bg-light p-4">
                         <div class="row align-items-center">
@@ -114,7 +114,7 @@ $related_products = getData($related_query, [$product_id]) ?: [];
                                     <button class="btn btn-outline-secondary" type="button" id="decreaseQty">
                                         <i class="bi bi-dash"></i>
                                     </button>
-                                    <input class="form-control text-center" id="inputQuantity" type="number" value="1" min="1" max="<?= $product->stock ?? 99 ?>" />
+                                    <input class="form-control text-center" id="inputQuantity" type="number" value="1" min="1" max="<?= $product->stok ?? 99 ?>" />
                                     <button class="btn btn-outline-secondary" type="button" id="increaseQty">
                                         <i class="bi bi-plus"></i>
                                     </button>
@@ -123,10 +123,10 @@ $related_products = getData($related_query, [$product_id]) ?: [];
 
                             <div class="col-8">
                                 <?php if (isLoggedIn()): ?>
-                                    <?php if (isset($product->stock) && $product->stock > 0): ?>
+                                    <?php if (isset($product->stok) && $product->stok > 0): ?>
                                         <button class="btn btn-primary btn-lg w-100 add-to-cart-btn"
                                             data-product-id="<?= $product->id ?>"
-                                            data-product-name="<?= htmlspecialchars($product->name) ?>">
+                                            data-product-name="<?= htmlspecialchars($product->nama_obat) ?>">
                                             <i class="bi bi-cart-plus me-2"></i>
                                             Tambah ke Keranjang
                                         </button>
@@ -177,16 +177,16 @@ $related_products = getData($related_query, [$product_id]) ?: [];
                         <div class="card h-100">
                             <!-- Product image-->
                             <img class="card-img-top"
-                                src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($related->image) ?>"
-                                alt="<?= htmlspecialchars($related->name) ?>"
+                                src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($related->gambar) ?>"
+                                alt="<?= htmlspecialchars($related->nama_obat) ?>"
                                 style="height: 200px; object-fit: cover;" />
                             <!-- Product details-->
                             <div class="card-body p-4">
                                 <div class="text-center">
                                     <!-- Product name-->
-                                    <h5 class="fw-bolder"><?= htmlspecialchars($related->name) ?></h5>
+                                    <h5 class="fw-bolder"><?= htmlspecialchars($related->nama_obat) ?></h5>
                                     <!-- Product price-->
-                                    <p class="text-primary fw-bold">Rp<?= number_format($related->price, 0, '.', ',') ?></p>
+                                    <p class="text-primary fw-bold">Rp<?= number_format($related->harga, 0, '.', ',') ?></p>
                                 </div>
                             </div>
                             <!-- Product actions-->
@@ -195,10 +195,10 @@ $related_products = getData($related_query, [$product_id]) ?: [];
                                     <a class="btn btn-outline-primary btn-sm" href="?page=show&id=<?= $related->id ?>">
                                         <i class="bi bi-eye me-1"></i>Detail
                                     </a>
-                                    <?php if (isLoggedIn() && $user['role'] === 'user'): ?>
+                                    <?php if (isLoggedIn() && $user['peran'] === 'user'): ?>
                                         <button class="btn btn-primary btn-sm add-to-cart-btn"
                                             data-product-id="<?= $related->id ?>"
-                                            data-product-name="<?= htmlspecialchars($related->name) ?>">
+                                            data-product-name="<?= htmlspecialchars($related->nama_obat) ?>">
                                             <i class="bi bi-cart-plus me-1"></i>Tambah
                                         </button>
                                     <?php endif; ?>
@@ -320,20 +320,16 @@ $related_products = getData($related_query, [$product_id]) ?: [];
                     const data = JSON.parse(text);
 
                     if (data.success) {
-                        // Update cart count if provided
                         if (data.cart_count !== undefined) {
                             updateCartCount(data.cart_count);
                         }
 
-                        // Show success message
                         showToast(data.message || 'Produk berhasil ditambahkan ke keranjang!', 'success');
 
-                        // Success state
                         btn.innerHTML = '<i class="bi bi-cart-check me-2"></i>Berhasil Ditambah!';
                         btn.classList.remove('btn-primary');
                         btn.classList.add('btn-success');
 
-                        // Reset after 3 seconds
                         setTimeout(() => {
                             btn.innerHTML = '<i class="bi bi-cart-plus me-2"></i>Tambah ke Keranjang';
                             btn.classList.remove('btn-success');

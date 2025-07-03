@@ -7,7 +7,7 @@ if (isset($_GET['page'])) {
 
     if (count($arrayUrl) > 1) {
         if (file_exists("../../dashboard/admin/$arrayUrl[0]/$arrayUrl[1].php") || file_exists("../../dashboard/user/$arrayUrl[0]/$arrayUrl[1].php")) {
-            if ($user['role'] === 'admin') {
+            if ($user['peran'] === 'admin') {
                 include "../../dashboard/admin/$arrayUrl[0]/$arrayUrl[1].php";
             } else {
                 include "../../dashboard/user/$arrayUrl[0]/$arrayUrl[1].php";
@@ -17,7 +17,7 @@ if (isset($_GET['page'])) {
         }
     } elseif (count($arrayUrl) < 2) {
         if (file_exists("../../dashboard/admin/$arrayUrl[0].php") || file_exists("../../dashboard/user/$arrayUrl[0].php")) {
-            if ($user['role'] ===  'admin') {
+            if ($user['peran'] ===  'admin') {
                 include "../../dashboard/admin/$page.php";
             } else {
                 include "../../dashboard/user/$page.php";
@@ -27,7 +27,7 @@ if (isset($_GET['page'])) {
         }
     }
 } else {
-    if ($user['role'] === 'admin') {
+    if ($user['peran'] === 'admin') {
         include "../../dashboard/admin/index.php";
     } else {
         include "../../dashboard/user/index.php";

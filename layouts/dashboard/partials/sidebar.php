@@ -26,7 +26,7 @@ $user = getUserData();
                 </a>
             </li>
             <li class="sidebar-item">
-                <a class="sidebar-link <?= !isset($_GET['page']) ? 'active' : '' ?>" href="<?= $user['role'] === 'admin' ? '/apotek-alifa/layouts/dashboard/' : '/apotek-alifa/layouts/dashboard/' ?>" aria-expanded="false">
+                <a class="sidebar-link <?= !isset($_GET['page']) ? 'active' : '' ?>" href="<?= $user['peran'] === 'admin' ? '/apotek-alifa/layouts/dashboard/' : '/apotek-alifa/layouts/dashboard/' ?>" aria-expanded="false">
                     <i class="ti ti-layout"></i>
                     <span class="hide-menu">Dasbor</span>
                 </a>
@@ -38,7 +38,7 @@ $user = getUserData();
                 <iconify-icon icon="solar:menu-dots-linear" class="nav-small-cap-icon fs-4"></iconify-icon>
                 <span class="hide-menu">Manajemen</span>
             </li>
-            <?php if ($user['role'] === 'admin') : ?>
+            <?php if ($user['peran'] === 'admin') : ?>
                 <li class="sidebar-item">
                     <a class="sidebar-link <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'user.index' ? 'active' : '' ?> <?php endif; ?> justify-content-between"
                         href="/apotek-alifa/layouts/dashboard?page=user.index"
@@ -79,7 +79,7 @@ $user = getUserData();
                 </a>
             </li>
 
-            <?php if ($user['role'] === 'user') : ?>
+            <?php if ($user['peran'] === 'user') : ?>
                 <li class="sidebar-item">
                     <a class="sidebar-link justify-content-between <?php if (isset($_GET['page'])) : ?> <?= $_GET['page'] === 'order_history.index' || $_GET['page'] === 'order_history.show' ? 'active' : '' ?> <?php endif; ?>"
                         href="/apotek-alifa/layouts/dashboard?page=order_history.index" aria-expanded="false">

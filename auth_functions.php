@@ -7,7 +7,7 @@ function login($username, $password)
 {
     global $conn;
     
-    $query = "SELECT * FROM users WHERE username = ? OR email = ?";
+    $query = "SELECT * FROM pengguna WHERE nama_pengguna = ? OR surel = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("ss", $username, $username);
     $stmt->execute();
@@ -16,26 +16,20 @@ function login($username, $password)
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
 
-        if (password_verify($password, $user['password'])) {
+        if (password_verify($password, $user['sandi'])) {
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['full_name'] = $user['full_name'];
-            $_SESSION['email'] = $user['email'];
+            $_SESSION['username'] = $user['nama_pengguna'];
+            $_SESSION['full_name'] = $user['nama_lengkap'];
+            $_SESSION['email'] = $user['surel'];
             $_SESSION['avatar'] = $user['avatar'];
-            $_SESSION['role'] = $user['role'];
+            $_SESSION['role'] = $user['peran'];
             $_SESSION['logged_in'] = true;
 
-            // $stmt->close();
-            // $conn->close();
             return ['success' => true, 'message' => 'Login berhasil!'];
         } else {
-            // $stmt->close();
-            // $conn->close();
             return ['success' => false, 'message' => 'Password salah!'];
         }
     } else {
-        // $stmt->close();
-        // $conn->close();
         return ['success' => false, 'message' => 'Username atau email tidak ditemukan!'];
     }
 }
@@ -68,7 +62,7 @@ function register($full_name, $username, $email, $password, $confirm_password)
         return ['success' => false, 'message' => 'Nama lengkap minimal 2 karakter!'];
     }
 
-    $checkQuery = "SELECT * FROM users WHERE username = ? OR email = ?";
+    $checkQuery = "SELECT * FROM pengguna WHERE nama_pengguna = ? OR surel = ?";
     $checkStmt = $conn->prepare($checkQuery);
     $checkStmt->bind_param("ss", $username, $email);
     $checkStmt->execute();
@@ -76,8 +70,6 @@ function register($full_name, $username, $email, $password, $confirm_password)
 
     if ($checkResult->num_rows > 0) {
         $existing = $checkResult->fetch_assoc();
-        // $checkStmt->close();
-        // $conn->close();
 
         if ($existing['username'] === $username) {
             return ['success' => false, 'message' => 'Username sudah digunakan!'];
@@ -88,19 +80,13 @@ function register($full_name, $username, $email, $password, $confirm_password)
 
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-    $insertQuery = "INSERT INTO users (full_name, username, email, password, avatar, role, created_at) VALUES (?, ?, ?, ?, 'user-1.png', 'user', NOW())";
+    $insertQuery = "INSERT INTO pengguna (nama_lengkap, nama_pengguna, surel, sandi, avatar, peran, waktu_dibuat) VALUES (?, ?, ?, ?, 'user-1.png', 'user', NOW())";
     $insertStmt = $conn->prepare($insertQuery);
     $insertStmt->bind_param("ssss", $full_name, $username, $email, $hashedPassword);
 
     if ($insertStmt->execute()) {
-        // $checkStmt->close();
-        // $insertStmt->close();
-        // $conn->close();
         return ['success' => true, 'message' => 'Registrasi berhasil! Silakan login.'];
     } else {
-        // $checkStmt->close();
-        // $insertStmt->close();
-        // $conn->close();
         return ['success' => false, 'message' => 'Terjadi kesalahan saat registrasi!'];
     }
 }
@@ -145,8 +131,8 @@ function getUserData($user_id = null)
         return null;
     }
 
-    $query = "SELECT id, username, email, full_name, avatar, role, created_at
-              FROM users 
+    $query = "SELECT id, nama_pengguna, surel, nama_lengkap, avatar, peran, waktu_dibuat
+              FROM pengguna 
               WHERE id = ?";
 
     $stmt = $conn->prepare($query);
@@ -158,9 +144,6 @@ function getUserData($user_id = null)
     if ($result->num_rows > 0) {
         $user = $result->fetch_assoc();
     }
-
-    // $stmt->close();
-    // $conn->close();
 
     return $user;
 }

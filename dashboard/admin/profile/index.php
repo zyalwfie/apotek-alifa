@@ -14,7 +14,7 @@ unset($_SESSION['success_message']);
         <h5 class="card-title fw-semibold mb-3">Avatar</h5>
         <div class="card py-4">
             <img id="imgPreview" src="/apotek-alifa/assets/img/profile/<?= htmlspecialchars($user['avatar'] ?: 'user-1.svg') ?>"
-                alt="<?= htmlspecialchars($user['username']) ?>"
+                alt="<?= htmlspecialchars($user['nama_pengguna']) ?>"
                 style="width: 81%; margin: auto;">
         </div>
     </div>
@@ -36,7 +36,7 @@ unset($_SESSION['success_message']);
                     <input type="text"
                         class="form-control"
                         disabled
-                        value="<?= htmlspecialchars($user['full_name'] ?: '') ?>"
+                        value="<?= htmlspecialchars($user['nama_lengkap'] ?: '') ?>"
                         placeholder="Belum ada nama lengkap">
                 </div>
                 <div class="form-group mb-3">
@@ -44,14 +44,14 @@ unset($_SESSION['success_message']);
                     <input type="text"
                         class="form-control"
                         disabled
-                        value="<?= htmlspecialchars($user['username']) ?>">
+                        value="<?= htmlspecialchars($user['nama_pengguna']) ?>">
                 </div>
                 <div class="form-group mb-3">
                     <label for="email" class="form-label">Surel</label>
                     <input type="email"
                         class="form-control"
                         disabled
-                        value="<?= htmlspecialchars($user['email']) ?>">
+                        value="<?= htmlspecialchars($user['surel']) ?>">
                 </div>
             </div>
         </div>

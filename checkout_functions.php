@@ -1,5 +1,4 @@
 <?php
-
 require_once 'auth_functions.php';
 require_once 'cart_functions.php';
 require_once 'connect.php';
@@ -7,7 +6,7 @@ require_once 'connect.php';
 function createOrder($orderData)
 {
     global $conn;
-    
+
     if (!isLoggedIn()) {
         return ['success' => false, 'message' => 'Silakan login terlebih dahulu!'];
     }
@@ -24,10 +23,10 @@ function createOrder($orderData)
 
         $total_price = 0;
         foreach ($cartItems as $item) {
-            $total_price += $item['quantity'] * $item['price_at_add'];
+            $total_price += $item['kuantitas'] * $item['harga_saat_ditambah'];
         }
 
-        $orderQuery = "INSERT INTO orders (user_id, status, total_price, street_address, recipient_name, recipient_email, recipient_phone, notes, created_at, updated_at) VALUES (?, 'tertunda', ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        $orderQuery = "INSERT INTO pesanan (id_pengguna, status, harga_total, alamat, order_username, user_email, nomor_telepon_penerima, catatan, waktu_dibuat, waktu_diubah) VALUES (?, 'tertunda', ?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
         $orderStmt = $conn->prepare($orderQuery);
         if (!$orderStmt) {
@@ -50,9 +49,9 @@ function createOrder($orderData)
         }
 
         $order_id = $conn->insert_id;
-        // $orderStmt->close();
+        $orderStmt->close();
 
-        $orderItemQuery = "INSERT INTO order_items (order_id, product_id, quantity, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())";
+        $orderItemQuery = "INSERT INTO barang_pesanan (id_pesanan, id_obat, kuantitas, waktu_dibuat, waktu_diubah) VALUES (?, ?, ?, NOW(), NOW())";
         $orderItemStmt = $conn->prepare($orderItemQuery);
 
         if (!$orderItemStmt) {
@@ -60,29 +59,27 @@ function createOrder($orderData)
         }
 
         foreach ($cartItems as $item) {
-            $orderItemStmt->bind_param("iii", $order_id, $item['product_id'], $item['quantity']);
+            $orderItemStmt->bind_param("iii", $order_id, $item['id_obat'], $item['kuantitas']);
             if (!$orderItemStmt->execute()) {
                 throw new Exception('Failed to insert order item: ' . $orderItemStmt->error);
             }
 
-            $updateStockQuery = "UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?";
+            $updateStockQuery = "UPDATE obat SET stok = stok - ? WHERE id = ? AND stok >= ?";
             $updateStockStmt = $conn->prepare($updateStockQuery);
-            $updateStockStmt->bind_param("iii", $item['quantity'], $item['product_id'], $item['quantity']);
+            $updateStockStmt->bind_param("iii", $item['kuantitas'], $item['id_obat'], $item['kuantitas']);
 
             if (!$updateStockStmt->execute()) {
-                throw new Exception('Failed to update stock for product ID: ' . $item['product_id']);
+                throw new Exception('Failed to update stock for product ID: ' . $item['id_obat']);
             }
 
             if ($updateStockStmt->affected_rows === 0) {
-                throw new Exception('Insufficient stock for product: ' . $item['name']);
+                throw new Exception('Insufficient stock for product: ' . $item['nama_obat']);
             }
-
-            // $updateStockStmt->close();
+            $updateStockStmt->close();
         }
+        $orderItemStmt->close();
 
-        // $orderItemStmt->close();
-
-        $paymentQuery = "INSERT INTO payments (order_id, proof_of_payment, created_at, updated_at) VALUES (?, NULL, NOW(), NOW())";
+        $paymentQuery = "INSERT INTO pembayaran (id_pesanan, bukti_pembayaran, waktu_dibuat, waktu_diubah) VALUES (?, NULL, NOW(), NOW())";
         $paymentStmt = $conn->prepare($paymentQuery);
 
         if (!$paymentStmt) {
@@ -93,7 +90,7 @@ function createOrder($orderData)
         if (!$paymentStmt->execute()) {
             throw new Exception('Failed to create payment record: ' . $paymentStmt->error);
         }
-        // $paymentStmt->close();
+        $paymentStmt->close();
 
         if (!clearCart($user_id)) {
             throw new Exception('Failed to clear cart');
@@ -101,7 +98,6 @@ function createOrder($orderData)
 
         $conn->commit();
         $conn->autocommit(true);
-        // $conn->close();
 
         return [
             'success' => true,
@@ -112,7 +108,6 @@ function createOrder($orderData)
     } catch (Exception $e) {
         $conn->rollback();
         $conn->autocommit(true);
-        // $conn->close();
 
         return [
             'success' => false,
@@ -124,41 +119,158 @@ function createOrder($orderData)
 function getOrderDetails($order_id)
 {
     global $conn;
-    
-    if (!isLoggedIn()) {
+
+    try {
+        if (!$conn) {
+            return null;
+        }
+
+        if (isLoggedIn()) {
+            $user_id = $_SESSION['user_id'];
+            $query = "SELECT * FROM pesanan WHERE id = ? AND id_pengguna = ?";
+            $stmt = $conn->prepare($query);
+
+            if (!$stmt) {
+                return null;
+            }
+
+            $stmt->bind_param("ii", $order_id, $user_id);
+        } else {
+            $query = "SELECT * FROM pesanan WHERE id = ?";
+            $stmt = $conn->prepare($query);
+
+            if (!$stmt) {
+                return null;
+            }
+
+            $stmt->bind_param("i", $order_id);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 0) {
+            $stmt->close();
+            return null;
+        }
+
+        $order = $result->fetch_assoc();
+        $stmt->close();
+
+        return $order;
+    } catch (Exception $e) {
+        error_log("Error in getOrderDetails: " . $e->getMessage());
         return null;
     }
+}
 
-    $user_id = $_SESSION['user_id'];
+function hasPaymentProof($order_id)
+{
+    global $conn;
 
-    $query = "SELECT o.*, 
-                     GROUP_CONCAT(CONCAT(p.name, ' (', oi.quantity, 'x)') SEPARATOR ', ') as items
-              FROM orders o
-              LEFT JOIN order_items oi ON o.id = oi.order_id
-              LEFT JOIN products p ON oi.product_id = p.id
-              WHERE o.id = ? AND o.user_id = ?
-              GROUP BY o.id";
+    try {
+        if (!$conn) {
+            return false;
+        }
 
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("ii", $order_id, $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+        $query = "SELECT bukti_pembayaran FROM pembayaran WHERE id_pesanan = ? AND bukti_pembayaran IS NOT NULL AND bukti_pembayaran != '' ORDER BY waktu_dibuat DESC LIMIT 1";
+        $stmt = $conn->prepare($query);
 
-    $order = null;
-    if ($result->num_rows > 0) {
-        $order = $result->fetch_assoc();
+        if (!$stmt) {
+            return false;
+        }
+
+        $stmt->bind_param("i", $order_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $hasProof = $result->num_rows > 0;
+        $stmt->close();
+
+        return $hasProof;
+    } catch (Exception $e) {
+        error_log("Error in hasPaymentProof: " . $e->getMessage());
+        return false;
     }
+}
 
-    // $stmt->close();
-    // $conn->close();
+function getPaymentDetails($order_id)
+{
+    global $conn;
 
-    return $order;
+    try {
+        if (!$conn) {
+            return null;
+        }
+
+        $query = "SELECT * FROM pembayaran WHERE id_pesanan = ? ORDER BY waktu_dibuat DESC LIMIT 1";
+        $stmt = $conn->prepare($query);
+
+        if (!$stmt) {
+            return null;
+        }
+
+        $stmt->bind_param("i", $order_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 0) {
+            $stmt->close();
+            return null;
+        }
+
+        $payment = $result->fetch_assoc();
+        $stmt->close();
+
+        return $payment;
+    } catch (Exception $e) {
+        error_log("Error in getPaymentDetails: " . $e->getMessage());
+        return null;
+    }
+}
+
+function getOrderItemsSummary($order_id)
+{
+    global $conn;
+
+    try {
+        if (!$conn) {
+            return '';
+        }
+
+        $query = "SELECT oi.kuantitas, p.nama_obat 
+                  FROM barang_pesanan oi 
+                  JOIN obat p ON oi.id_obat = p.id 
+                  WHERE oi.id_pesanan = ?";
+
+        $stmt = $conn->prepare($query);
+
+        if (!$stmt) {
+            return '';
+        }
+
+        $stmt->bind_param("i", $order_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $items = [];
+        while ($row = $result->fetch_assoc()) {
+            $items[] = $row['kuantitas'] . 'x ' . $row['nama_obat'];
+        }
+
+        $stmt->close();
+
+        return implode(', ', $items);
+    } catch (Exception $e) {
+        error_log("Error in getOrderItemsSummary: " . $e->getMessage());
+        return '';
+    }
 }
 
 function uploadPaymentProof($order_id, $file)
 {
     global $conn;
-    
+
     if (!isLoggedIn()) {
         return ['success' => false, 'message' => 'Silakan login terlebih dahulu!'];
     }
@@ -166,16 +278,17 @@ function uploadPaymentProof($order_id, $file)
     $user_id = $_SESSION['user_id'];
 
     try {
-        $verifyQuery = "SELECT id FROM orders WHERE id = ? AND user_id = ?";
+        $verifyQuery = "SELECT id FROM pesanan WHERE id = ? AND id_pengguna = ?";
         $verifyStmt = $conn->prepare($verifyQuery);
         $verifyStmt->bind_param("ii", $order_id, $user_id);
         $verifyStmt->execute();
         $verifyResult = $verifyStmt->get_result();
 
         if ($verifyResult->num_rows === 0) {
+            $verifyStmt->close();
             throw new Exception('Order not found or access denied');
         }
-        // $verifyStmt->close();
+        $verifyStmt->close();
 
         $uploadDir = '../../assets/img/payments/';
         if (!is_dir($uploadDir)) {
@@ -200,24 +313,16 @@ function uploadPaymentProof($order_id, $file)
             throw new Exception('Failed to upload file');
         }
 
-        $updateQuery = "UPDATE payments SET proof_of_payment = ?, updated_at = NOW() WHERE order_id = ?";
+        $updateQuery = "UPDATE pembayaran SET bukti_pembayaran = ?, waktu_diubah = NOW() WHERE id_pesanan = ?";
         $updateStmt = $conn->prepare($updateQuery);
         $updateStmt->bind_param("si", $fileName, $order_id);
 
         if (!$updateStmt->execute()) {
             unlink($uploadPath);
+            $updateStmt->close();
             throw new Exception('Failed to update payment record');
         }
-
-        // $updateStmt->close();
-
-        // $statusQuery = "UPDATE orders SET status = 'berhasil', updated_at = NOW() WHERE id = ?";
-        // $statusStmt = $conn->prepare($statusQuery);
-        // $statusStmt->bind_param("i", $order_id);
-        // $statusStmt->execute();
-        // $statusStmt->close();
-
-        // $conn->close();
+        $updateStmt->close();
 
         return [
             'success' => true,
@@ -225,7 +330,6 @@ function uploadPaymentProof($order_id, $file)
             'filename' => $fileName
         ];
     } catch (Exception $e) {
-        // $conn->close();
         return [
             'success' => false,
             'message' => $e->getMessage()
@@ -237,40 +341,69 @@ function getUserOrders($user_id, $limit = 10, $offset = 0)
 {
     global $conn;
 
-    $query = "SELECT o.*, 
-                     COUNT(oi.id) as item_count,
-                     p.proof_of_payment
-              FROM orders o
-              LEFT JOIN order_items oi ON o.id = oi.order_id
-              LEFT JOIN payments p ON o.id = p.order_id
-              WHERE o.user_id = ?
-              GROUP BY o.id
-              ORDER BY o.created_at DESC
-              LIMIT ? OFFSET ?";
+    try {
+        $query = "SELECT o.*, 
+                         COUNT(oi.id) as item_count,
+                         p.bukti_pembayaran
+                  FROM pesanan o
+                  LEFT JOIN barang_pesanan oi ON o.id = oi.id_pesanan
+                  LEFT JOIN pembayaran p ON o.id = p.id_pesanan
+                  WHERE o.id_pengguna = ?
+                  GROUP BY o.id
+                  ORDER BY o.waktu_dibuat DESC
+                  LIMIT ? OFFSET ?";
 
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("iii", $user_id, $limit, $offset);
-    $stmt->execute();
-    $result = $stmt->get_result();
+        $stmt = $conn->prepare($query);
 
-    $orders = [];
-    while ($row = $result->fetch_assoc()) {
-        $orders[] = $row;
+        if (!$stmt) {
+            return [];
+        }
+
+        $stmt->bind_param("iii", $user_id, $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+
+        $stmt->close();
+        return $orders;
+    } catch (Exception $e) {
+        error_log("Error in getUserOrders: " . $e->getMessage());
+        return [];
     }
-
-    // $stmt->close();
-    // $conn->close();
-
-    return $orders;
 }
 
 function getOrderStatus($status)
 {
     $statuses = [
-        'tertunda' => ['text' => 'Tertunda', 'class' => 'warning', 'icon' => 'clock'],
-        'berhasil' => ['text' => 'Berhasil', 'class' => 'info', 'icon' => 'gear'],
-        'gagal' => ['text' => 'Dibatalkan', 'class' => 'danger', 'icon' => 'x-circle']
+        'tertunda' => [
+            'text' => 'Menunggu Pembayaran',
+            'class' => 'warning',
+            'icon' => 'clock'
+        ],
+        'berhasil' => [
+            'text' => 'Pembayaran Berhasil',
+            'class' => 'success',
+            'icon' => 'check-circle'
+        ],
+        'gagal' => [
+            'text' => 'Pembayaran Gagal',
+            'class' => 'danger',
+            'icon' => 'x-circle'
+        ],
+        'selesai' => [
+            'text' => 'Pesanan Selesai',
+            'class' => 'primary',
+            'icon' => 'check-all'
+        ]
     ];
 
-    return $statuses[$status] ?? ['text' => 'Unknown', 'class' => 'secondary', 'icon' => 'question'];
+    return $statuses[$status] ?? [
+        'text' => 'Status Tidak Diketahui',
+        'class' => 'secondary',
+        'icon' => 'question-circle'
+    ];
 }

@@ -11,13 +11,13 @@ try {
     ob_clean();
 
     if (!file_exists('cart_functions.php')) {
-        throw new Exception('cart_functions.php not found');
+        throw new Exception('cart_functions.php tidak ditemukan');
     }
 
     require_once 'cart_functions.php';
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new Exception('Method not allowed');
+        throw new Exception('Method tidak diizinkan');
     }
 
     if (!function_exists('isLoggedIn') || !isLoggedIn()) {
@@ -41,7 +41,7 @@ try {
     }
 
     if (!function_exists('addToCart')) {
-        throw new Exception('Function addToCart not found');
+        throw new Exception('Function addToCart tidak ditemukan');
     }
 
     $result = addToCart($product_id, $quantity);
@@ -56,23 +56,14 @@ try {
 
     echo json_encode([
         'success' => false,
-        'message' => $e->getMessage(),
-        'debug' => [
-            'file' => basename($e->getFile()),
-            'line' => $e->getLine()
-        ]
+        'message' => $e->getMessage()
     ]);
 } catch (Error $e) {
     error_log("Fatal error in add to cart: " . $e->getMessage());
 
     echo json_encode([
         'success' => false,
-        'message' => 'Terjadi kesalahan sistem',
-        'debug' => [
-            'error' => $e->getMessage(),
-            'file' => basename($e->getFile()),
-            'line' => $e->getLine()
-        ]
+        'message' => 'Terjadi kesalahan sistem'
     ]);
 }
 

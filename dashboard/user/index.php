@@ -135,10 +135,10 @@ $userRecentOrders = getUserRecentOrders($user_id);
                                                     class="rounded-circle" width="40" alt="Avatar" />
                                                 <div class="ms-3">
                                                     <h6 class="mb-0 fw-bolder">
-                                                        <?= htmlspecialchars($order['recipient_name']) ?>
+                                                        <?= htmlspecialchars($order['nama_penerima']) ?>
                                                     </h6>
                                                     <span class="text-muted">
-                                                        <?= htmlspecialchars($order['recipient_phone']) ?>
+                                                        <?= htmlspecialchars($order['nomor_telepon_penerima']) ?>
                                                     </span>
                                                 </div>
                                             </div>
@@ -152,7 +152,7 @@ $userRecentOrders = getUserRecentOrders($user_id);
                                             </span>
                                         </td>
                                         <td class="px-0 text-dark fw-medium text-end">
-                                            <?= formatRupiah($order['total_price']) ?>
+                                            <?= formatRupiah($order['harga_total']) ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

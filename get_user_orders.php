@@ -12,6 +12,7 @@ require_once 'connect.php';
 
 try {
     require_once 'auth_functions.php';
+    require_once 'order_functions.php';
 
     if (!isLoggedIn() || !isAdmin($_SESSION['user_id'])) {
         throw new Exception('Unauthorized access');
@@ -23,15 +24,12 @@ try {
 
     $userId = intval($_GET['user_id']);
 
-    $query = "SELECT COUNT(*) as total FROM orders WHERE user_id = ?";
+    $query = "SELECT COUNT(*) as total FROM pesanan WHERE id_pengguna = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result();
     $total = $result->fetch_assoc()['total'];
-
-    // $stmt->close();
-    // $conn->close();
 
     echo json_encode([
         'success' => true,

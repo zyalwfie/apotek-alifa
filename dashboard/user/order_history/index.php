@@ -99,7 +99,6 @@ $totalItems = $result['total'];
                             </thead>
                             <tbody>
                                 <?php
-                                // Calculate correct row number based on pagination
                                 $rowNumber = ($currentPage - 1) * $itemsPerPage + 1;
                                 ?>
                                 <?php foreach ($orders as $order): ?>
@@ -112,10 +111,10 @@ $totalItems = $result['total'];
 
                                         <td class="px-0">
                                             <div>
-                                                <h6 class="mb-1 fw-semibold"><?= htmlspecialchars($order['recipient_name']) ?></h6>
+                                                <h6 class="mb-1 fw-semibold"><?= htmlspecialchars($order['nama_penerima']) ?></h6>
                                                 <small class="text-muted">
                                                     <i class="ti ti-mail me-1"></i>
-                                                    <?= htmlspecialchars($order['recipient_email']) ?>
+                                                    <?= htmlspecialchars($order['surel_penerima']) ?>
                                                 </small>
                                                 <br>
                                                 <small class="text-muted">
@@ -127,7 +126,7 @@ $totalItems = $result['total'];
                                         <td class="px-0">
                                             <div>
                                                 <h6 class="mb-1 fw-bold text-primary">
-                                                    Rp<?= number_format($order['total_price'], 0, '.', ',') ?>
+                                                    Rp<?= number_format($order['harga_total'], 0, '.', ',') ?>
                                                 </h6>
                                                 <small class="text-muted">
                                                     <i class="ti ti-package me-1"></i>
@@ -135,33 +134,33 @@ $totalItems = $result['total'];
                                                 </small>
                                                 <br>
                                                 <small class="text-muted">
-                                                    <?= date('d M Y', strtotime($order['order_created_at'])) ?>
+                                                    <?= date('d M Y', strtotime($order['waktu_dibuat_pesanan'])) ?>
                                                 </small>
                                             </div>
                                         </td>
 
                                         <td class="px-0">
-                                            <?php if ($order['status_at_approval'] === 'berhasil'): ?>
+                                            <?php if ($order['status_saat_disetujui'] === 'berhasil'): ?>
                                                 <span class="badge bg-success">
                                                     <i class="ti ti-check me-1"></i>Berhasil
                                                 </span>
-                                            <?php elseif ($order['status_at_approval'] === 'tertunda'): ?>
+                                            <?php elseif ($order['status_saat_disetujui'] === 'tertunda'): ?>
                                                 <span class="badge bg-warning">
                                                     <i class="ti ti-clock me-1"></i>Tertunda
                                                 </span>
-                                            <?php elseif ($order['status_at_approval'] === 'gagal'): ?>
+                                            <?php elseif ($order['status_saat_disetujui'] === 'gagal'): ?>
                                                 <span class="badge bg-danger">
                                                     <i class="ti ti-x me-1"></i>Gagal
                                                 </span>
                                             <?php else: ?>
                                                 <span class="badge bg-info">
-                                                    <i class="ti ti-info me-1"></i><?= ucfirst($order['status_at_approval']) ?>
+                                                    <i class="ti ti-info me-1"></i><?= ucfirst($order['status_saat_disetujui']) ?>
                                                 </span>
                                             <?php endif; ?>
                                         </td>
 
                                         <td class="px-0 text-end">
-                                            <a href="/apotek-alifa/layouts/dashboard?page=order.show&order_id=<?= $order['id'] ?>"
+                                            <a href="/apotek-alifa/layouts/dashboard?page=order_history.show&order_id=<?= $order['id'] ?>"
                                                 class="btn btn-sm btn-outline-primary">
                                                 <i class="ti ti-eye me-1"></i>Lihat
                                             </a>
@@ -171,7 +170,6 @@ $totalItems = $result['total'];
                             </tbody>
                         </table>
 
-                        <!-- PAGINATION - Always show if totalPages > 1 -->
                         <?php if ($totalPages > 1): ?>
                             <div class="d-flex justify-content-between align-items-center mt-4">
                                 <div>

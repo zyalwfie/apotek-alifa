@@ -1,12 +1,9 @@
 <?php
-// process_checkout.php
 header('Content-Type: application/json');
 
-// Prevent HTML output
 ob_start();
 ob_clean();
 
-// Disable error display
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
@@ -27,7 +24,6 @@ try {
         exit;
     }
 
-    // Validate required fields
     $required_fields = ['recipient_name', 'recipient_email', 'street_address', 'recipient_phone'];
     foreach ($required_fields as $field) {
         if (empty($_POST[$field])) {
@@ -35,7 +31,6 @@ try {
         }
     }
 
-    // Prepare order data
     $orderData = [
         'recipient_name' => trim($_POST['recipient_name']),
         'recipient_email' => trim($_POST['recipient_email']),
@@ -44,21 +39,17 @@ try {
         'notes' => trim($_POST['notes'] ?? '')
     ];
 
-    // Validate email format
     if (!filter_var($orderData['recipient_email'], FILTER_VALIDATE_EMAIL)) {
         throw new Exception('Format email tidak valid!');
     }
 
-    // Validate phone format
     if (!preg_match('/^[0-9+\-\s()]+$/', $orderData['recipient_phone'])) {
         throw new Exception('Format nomor telepon tidak valid!');
     }
 
-    // Create order
     $result = createOrder($orderData);
 
     if ($result['success']) {
-        // Store order ID in session for payment
         $_SESSION['last_order_id'] = $result['order_id'];
 
         echo json_encode([

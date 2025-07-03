@@ -2,7 +2,6 @@
 require_once 'cart_functions.php';
 require_once 'auth_functions.php';
 
-// Redirect if not logged in
 requireLogin();
 
 $user_id = $_SESSION['user_id'];
@@ -51,24 +50,24 @@ $cartCount = getCartCount($user_id);
                             <tr id="cart-item-<?= $item['id'] ?>">
                                 <th scope="row"><?= $no++ ?></th>
                                 <td>
-                                    <img src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($item['image']) ?>"
-                                        alt="<?= htmlspecialchars($item['name']) ?>"
+                                    <img src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($item['gambar']) ?>"
+                                        alt="<?= htmlspecialchars($item['nama_obat']) ?>"
                                         width="80" height="80"
                                         style="object-fit: cover; border-radius: 8px;">
                                 </td>
                                 <td>
-                                    <h6 class="mb-1"><?= htmlspecialchars($item['name']) ?></h6>
+                                    <h6 class="mb-1"><?= htmlspecialchars($item['nama_obat']) ?></h6>
                                     <small class="text-muted">
-                                        Harga saat ditambah: Rp<?= number_format($item['price_at_add'], 0, '.', ',') ?>
+                                        Harga saat ditambah: Rp<?= number_format($item['harga_saat_ditambah'], 0, '.', ',') ?>
                                     </small>
-                                    <?php if ($item['current_price'] != $item['price_at_add']): ?>
+                                    <?php if ($item['current_price'] != $item['harga_saat_ditambah']): ?>
                                         <br><small class="text-info">
                                             Harga sekarang: Rp<?= number_format($item['current_price'], 0, '.', ',') ?>
                                         </small>
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <span class="fw-bold">Rp<?= number_format($item['price_at_add'], 0, '.', ',') ?></span>
+                                    <span class="fw-bold">Rp<?= number_format($item['harga_saat_ditambah'], 0, '.', ',') ?></span>
                                 </td>
                                 <td>
                                     <div class="input-group" style="max-width: 140px">
@@ -80,7 +79,7 @@ $cartCount = getCartCount($user_id);
                                         </button>
                                         <input type="number"
                                             class="form-control form-control-sm text-center quantity-input"
-                                            value="<?= $item['quantity'] ?>"
+                                            value="<?= $item['kuantitas'] ?>"
                                             min="1"
                                             data-cart-id="<?= $item['id'] ?>"
                                             readonly>
@@ -94,13 +93,13 @@ $cartCount = getCartCount($user_id);
                                 </td>
                                 <td>
                                     <span class="fw-bold text-primary item-subtotal">
-                                        Rp<?= number_format($item['quantity'] * $item['price_at_add'], 0, '.', ',') ?>
+                                        Rp<?= number_format($item['kuantitas'] * $item['harga_saat_ditambah'], 0, '.', ',') ?>
                                     </span>
                                 </td>
                                 <td>
                                     <button class="btn btn-outline-danger btn-sm remove-btn"
                                         data-cart-id="<?= $item['id'] ?>"
-                                        data-product-name="<?= htmlspecialchars($item['name']) ?>">
+                                        data-product-name="<?= htmlspecialchars($item['nama_obat']) ?>">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </td>
@@ -126,11 +125,11 @@ $cartCount = getCartCount($user_id);
                         <?php foreach ($cartItems as $item): ?>
                             <li class="list-group-item d-flex justify-content-between lh-sm" id="summary-item-<?= $item['id'] ?>">
                                 <div>
-                                    <h6 class="my-0"><?= htmlspecialchars($item['name']) ?></h6>
-                                    <small class="text-body-secondary">Qty: <?= $item['quantity'] ?></small>
+                                    <h6 class="my-0"><?= htmlspecialchars($item['nama_obat']) ?></h6>
+                                    <small class="text-body-secondary">Qty: <?= $item['kuantitas'] ?></small>
                                 </div>
                                 <span class="text-body-secondary">
-                                    Rp<?= number_format($item['quantity'] * $item['price_at_add'], 0, '.', ',') ?>
+                                    Rp<?= number_format($item['kuantitas'] * $item['harga_saat_ditambah'], 0, '.', ',') ?>
                                 </span>
                             </li>
                         <?php endforeach; ?>
@@ -298,7 +297,6 @@ $cartCount = getCartCount($user_id);
 </style>
 
 <script>
-    // Cart management functions
     function updateCartItem(cartId, action, quantity = null) {
         const formData = new FormData();
         formData.append('cart_id', cartId);
@@ -316,21 +314,17 @@ $cartCount = getCartCount($user_id);
             .then(data => {
                 if (data.success) {
                     if (action === 'remove') {
-                        // Remove item from DOM
                         document.getElementById(`cart-item-${cartId}`).remove();
                         document.getElementById(`summary-item-${cartId}`).remove();
 
-                        // Check if cart is empty
                         const remainingItems = document.querySelectorAll('[id^="cart-item-"]');
                         if (remainingItems.length === 0) {
-                            location.reload(); // Reload to show empty cart message
+                            location.reload();
                         }
                     } else {
-                        // Update quantities and totals
-                        location.reload(); // Simple reload for now
+                        location.reload();
                     }
 
-                    // Update cart count in header
                     updateHeaderCartCount(data.cart_count);
 
                     showToast(data.message, 'success');
@@ -345,7 +339,6 @@ $cartCount = getCartCount($user_id);
     }
 
     function updateHeaderCartCount(count) {
-        // Update cart badge in header
         const cartBadges = document.querySelectorAll('.badge');
         cartBadges.forEach(badge => {
             if (badge.closest('[href*="cart"]')) {
@@ -354,7 +347,6 @@ $cartCount = getCartCount($user_id);
             }
         });
 
-        // Update local cart count
         const localCartCount = document.getElementById('cart-count');
         if (localCartCount) {
             localCartCount.textContent = count;
@@ -378,9 +370,7 @@ $cartCount = getCartCount($user_id);
         toast.show();
     }
 
-    // Event listeners
     document.addEventListener('click', function(e) {
-        // Quantity buttons
         if (e.target.closest('.quantity-btn')) {
             const btn = e.target.closest('.quantity-btn');
             const cartId = btn.getAttribute('data-cart-id');
@@ -389,7 +379,6 @@ $cartCount = getCartCount($user_id);
             updateCartItem(cartId, action);
         }
 
-        // Remove buttons
         if (e.target.closest('.remove-btn')) {
             const btn = e.target.closest('.remove-btn');
             const cartId = btn.getAttribute('data-cart-id');
@@ -401,11 +390,9 @@ $cartCount = getCartCount($user_id);
         }
     });
 
-    // Checkout form submission
     document.getElementById('checkoutForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Validate form
         const requiredFields = ['recipient_name', 'recipient_email', 'street_address', 'recipient_phone'];
         let isValid = true;
 
@@ -420,7 +407,6 @@ $cartCount = getCartCount($user_id);
             }
         });
 
-        // Email validation
         const email = document.getElementById('recipient_email');
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (email.value && !emailRegex.test(email.value)) {
@@ -428,7 +414,6 @@ $cartCount = getCartCount($user_id);
             isValid = false;
         }
 
-        // Phone validation
         const phone = document.getElementById('recipient_phone');
         const phoneRegex = /^[0-9+\-\s()]+$/;
         if (phone.value && !phoneRegex.test(phone.value)) {
@@ -441,13 +426,11 @@ $cartCount = getCartCount($user_id);
             return;
         }
 
-        // Show loading state
         const checkoutBtn = document.getElementById('checkoutBtn');
         checkoutBtn.classList.add('loading');
         checkoutBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Memproses Pesanan...';
         checkoutBtn.disabled = true;
 
-        // Submit form via AJAX
         const formData = new FormData(this);
 
         fetch('/apotek-alifa/process_checkout.php', {
@@ -462,7 +445,6 @@ $cartCount = getCartCount($user_id);
                     if (data.success) {
                         showToast(data.message, 'success');
 
-                        // Redirect to payment page
                         setTimeout(() => {
                             window.location.href = data.redirect;
                         }, 1500);
@@ -495,7 +477,6 @@ $cartCount = getCartCount($user_id);
         checkoutBtn.disabled = false;
     }
 
-    // Real-time validation
     document.querySelectorAll('input, textarea').forEach(field => {
         field.addEventListener('blur', function() {
             if (this.hasAttribute('required') && !this.value.trim()) {

@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
         }
     }
 
-    $sql = "INSERT INTO products (name, category_id, price, stock, description, image) 
+    $sql = "INSERT INTO obat (nama_obat, id_kategori, harga, stok, deskripsi, gambar) 
             VALUES (?, ?, ?, ?, ?, ?)";
 
     if ($stmt = $conn->prepare($sql)) {
@@ -51,13 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             $_SESSION['message_type'] = 'danger';
         }
 
-        // $stmt->close();
     } else {
         $_SESSION['message'] = 'Terjadi kesalahan: ' . $conn->error;
         $_SESSION['message_type'] = 'danger';
     }
-
-    // $conn->close();
 
     header('Location:/apotek-alifa/layouts/dashboard?page=product.index');
     exit();

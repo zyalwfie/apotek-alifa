@@ -11,37 +11,36 @@ function getUsersForAdmin($search = '', $role = '', $page = 1, $limit = 10)
     $types = '';
 
     if (!empty($search)) {
-        $conditions[] = "(username LIKE ? OR email LIKE ? OR full_name LIKE ?)";
+        $conditions[] = "(nama_pengguna LIKE ? OR surel LIKE ? OR nama_lengkap LIKE ?)";
         $searchTerm = "%$search%";
         $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm]);
         $types .= 'sss';
     }
 
     if (!empty($role)) {
-        $conditions[] = "role = ?";
+        $conditions[] = "peran = ?";
         $params[] = $role;
         $types .= 's';
     }
 
     $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-    $countQuery = "SELECT COUNT(*) as total FROM users $whereClause";
+    $countQuery = "SELECT COUNT(*) as total FROM pengguna $whereClause";
     if (!empty($params)) {
         $countStmt = $conn->prepare($countQuery);
         $countStmt->bind_param($types, ...$params);
         $countStmt->execute();
         $countResult = $countStmt->get_result();
         $totalRows = $countResult->fetch_object()->total;
-        // $countStmt->close();
     } else {
         $countResult = $conn->query($countQuery);
         $totalRows = $countResult->fetch_object()->total;
     }
 
-    $query = "SELECT id, username, email, full_name, avatar, role, created_at 
-              FROM users 
+    $query = "SELECT id, nama_pengguna, surel, nama_lengkap, avatar, peran, waktu_dibuat 
+              FROM pengguna 
               $whereClause 
-              ORDER BY created_at DESC 
+              ORDER BY waktu_dibuat DESC 
               LIMIT ? OFFSET ?";
 
     if (!empty($params)) {
@@ -63,9 +62,6 @@ function getUsersForAdmin($search = '', $role = '', $page = 1, $limit = 10)
     while ($row = $result->fetch_assoc()) {
         $users[] = $row;
     }
-
-    // $stmt->close();
-    // $conn->close();
 
     return [
         'users' => $users,
@@ -97,18 +93,15 @@ function addUser($userData)
             return ['success' => false, 'message' => 'Password minimal 6 karakter'];
         }
 
-        $checkQuery = "SELECT id FROM users WHERE username = ?";
+        $checkQuery = "SELECT id FROM pengguna WHERE nama_pengguna = ?";
         $checkStmt = $conn->prepare($checkQuery);
         $checkStmt->bind_param("s", $userData['username']);
         $checkStmt->execute();
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            // $checkStmt->close();
-            // $conn->close();
             return ['success' => false, 'message' => 'Username sudah digunakan'];
         }
-        // $checkStmt->close();
 
         $checkQuery = "SELECT id FROM users WHERE email = ?";
         $checkStmt = $conn->prepare($checkQuery);
@@ -117,15 +110,12 @@ function addUser($userData)
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            // $checkStmt->close();
-            // $conn->close();
             return ['success' => false, 'message' => 'Email sudah digunakan'];
         }
-        // $checkStmt->close();
 
         $hashedPassword = password_hash($userData['password'], PASSWORD_DEFAULT);
 
-        $query = "INSERT INTO users (full_name, username, email, password, avatar, role, created_at) 
+        $query = "INSERT INTO pengguna (nama_lengkap, nama_pengguna, surel, sandi, avatar, peran, waktu_dibuat) 
                   VALUES (?, ?, ?, ?, 'user-1.svg', ?, NOW())";
 
         $stmt = $conn->prepare($query);
@@ -139,16 +129,11 @@ function addUser($userData)
         );
 
         if ($stmt->execute()) {
-            // $stmt->close();
-            // $conn->close();
             return ['success' => true, 'message' => 'Pengguna berhasil ditambahkan'];
         } else {
-            // $stmt->close();
-            // $conn->close();
             return ['success' => false, 'message' => 'Gagal menambahkan pengguna'];
         }
     } catch (Exception $e) {
-        // $conn->close();
         return ['success' => false, 'message' => $e->getMessage()];
     }
 }
@@ -170,31 +155,25 @@ function updateUser($userId, $userData)
             return ['success' => false, 'message' => 'Format email tidak valid'];
         }
 
-        $checkQuery = "SELECT id FROM users WHERE username = ? AND id != ?";
+        $checkQuery = "SELECT id FROM pengguna WHERE nama_pengguna = ? AND id != ?";
         $checkStmt = $conn->prepare($checkQuery);
         $checkStmt->bind_param("si", $userData['username'], $userId);
         $checkStmt->execute();
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            // $checkStmt->close();
-            // $conn->close();
             return ['success' => false, 'message' => 'Username sudah digunakan'];
         }
-        // $checkStmt->close();
 
-        $checkQuery = "SELECT id FROM users WHERE email = ? AND id != ?";
+        $checkQuery = "SELECT id FROM pengguna WHERE surel = ? AND id != ?";
         $checkStmt = $conn->prepare($checkQuery);
         $checkStmt->bind_param("si", $userData['email'], $userId);
         $checkStmt->execute();
         $checkResult = $checkStmt->get_result();
 
         if ($checkResult->num_rows > 0) {
-            // $checkStmt->close();
-            // $conn->close();
             return ['success' => false, 'message' => 'Email sudah digunakan'];
         }
-        // $checkStmt->close();
 
         if (isset($userData['password']) && !empty($userData['password'])) {
             if (strlen($userData['password']) < 6) {
@@ -202,7 +181,7 @@ function updateUser($userId, $userData)
             }
 
             $hashedPassword = password_hash($userData['password'], PASSWORD_DEFAULT);
-            $query = "UPDATE users SET username = ?, email = ?, password = ?, full_name = ?, role = ? WHERE id = ?";
+            $query = "UPDATE pengguna SET nama_pengguna = ?, surel = ?, password = ?, nama_lengkap = ?, peran = ? WHERE id = ?";
             $stmt = $conn->prepare($query);
             $stmt->bind_param(
                 "sssssi",
@@ -214,7 +193,7 @@ function updateUser($userId, $userData)
                 $userId
             );
         } else {
-            $query = "UPDATE users SET username = ?, email = ?, full_name = ?, role = ? WHERE id = ?";
+            $query = "UPDATE pengguna SET nama_pengguna = ?, surel = ?, nama_lengkap = ?, peran = ? WHERE id = ?";
             $stmt = $conn->prepare($query);
             $stmt->bind_param(
                 "ssssi",
@@ -227,16 +206,11 @@ function updateUser($userId, $userData)
         }
 
         if ($stmt->execute()) {
-            // $stmt->close();
-            // $conn->close();
             return ['success' => true, 'message' => 'Pengguna berhasil diperbarui'];
         } else {
-            // $stmt->close();
-            // $conn->close();
             return ['success' => false, 'message' => 'Gagal memperbarui pengguna'];
         }
     } catch (Exception $e) {
-        // $conn->close();
         return ['success' => false, 'message' => $e->getMessage()];
     }
 }
@@ -246,40 +220,32 @@ function deleteUser($userId)
     global $conn;
 
     try {
-        $checkQuery = "SELECT COUNT(*) as count FROM orders WHERE user_id = ?";
+        $checkQuery = "SELECT COUNT(*) as count FROM pesanan WHERE user_id = ?";
         $checkStmt = $conn->prepare($checkQuery);
         $checkStmt->bind_param("i", $userId);
         $checkStmt->execute();
         $checkResult = $checkStmt->get_result();
         $orderCount = $checkResult->fetch_assoc()['count'];
-        // $checkStmt->close();
 
         if ($orderCount > 0) {
-            // $conn->close();
             return ['success' => false, 'message' => 'Tidak dapat menghapus pengguna yang memiliki riwayat pesanan'];
         }
 
-        $deleteCartQuery = "DELETE FROM carts WHERE user_id = ?";
+        $deleteCartQuery = "DELETE FROM keranjang WHERE id_pengguna = ?";
         $deleteCartStmt = $conn->prepare($deleteCartQuery);
         $deleteCartStmt->bind_param("i", $userId);
         $deleteCartStmt->execute();
-        // $deleteCartStmt->close();
 
         $query = "DELETE FROM users WHERE id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("i", $userId);
 
         if ($stmt->execute()) {
-            // $stmt->close();
-            // $conn->close();
             return ['success' => true, 'message' => 'Pengguna berhasil dihapus'];
         } else {
-            // $stmt->close();
-            // $conn->close();
             return ['success' => false, 'message' => 'Gagal menghapus pengguna'];
         }
     } catch (Exception $e) {
-        // $conn->close();
         return ['success' => false, 'message' => $e->getMessage()];
     }
 }

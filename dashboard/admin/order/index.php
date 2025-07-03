@@ -133,16 +133,16 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         <td>
                                             <div>
                                                 <h6 class="mb-0"><?= htmlspecialchars($order['order_username']) ?></h6>
-                                                <small class="text-muted">ID: <?= $order['user_id'] ?></small>
+                                                <small class="text-muted">ID: <?= $order['id_pengguna'] ?></small>
                                             </div>
                                         </td>
 
                                         <td>
                                             <div>
-                                                <h6 class="mb-0"><?= htmlspecialchars($order['recipient_name']) ?></h6>
+                                                <h6 class="mb-0"><?= htmlspecialchars($order['nama_penerima']) ?></h6>
                                                 <small class="text-muted">
                                                     <i class="ti ti-mail align-middle"></i>
-                                                    <?= htmlspecialchars($order['recipient_email']) ?>
+                                                    <?= htmlspecialchars($order['surel_penerima']) ?>
                                                 </small>
                                             </div>
                                         </td>
@@ -150,7 +150,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         <td>
                                             <div>
                                                 <h6 class="mb-0 text-primary">
-                                                    Rp<?= number_format($order['total_price'], 0, ',', '.') ?>
+                                                    Rp<?= number_format($order['harga_total'], 0, ',', '.') ?>
                                                 </h6>
                                                 <small class="text-muted">
                                                     <?= $order['item_count'] ?> item
@@ -159,7 +159,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         </td>
 
                                         <td>
-                                            <?php if (!empty($order['proof_of_payment'])): ?>
+                                            <?php if (!empty($order['bukti_pembayaran'])): ?>
                                                 <span class="badge bg-success-subtle text-success">
                                                     <i class="ti ti-check"></i> Sudah Upload
                                                 </span>
@@ -181,9 +181,9 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         </td>
 
                                         <td>
-                                            <small><?= date('d M Y', strtotime($order['created_at'])) ?></small>
+                                            <small><?= date('d M Y', strtotime($order['waktu_dibuat'])) ?></small>
                                             <br>
-                                            <small class="text-muted"><?= date('H:i', strtotime($order['created_at'])) ?></small>
+                                            <small class="text-muted"><?= date('H:i', strtotime($order['waktu_dibuat'])) ?></small>
                                         </td>
 
                                         <td class="text-end">

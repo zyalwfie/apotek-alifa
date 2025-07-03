@@ -11,8 +11,8 @@ function getAllProductsWithPagination($search = '', $category = '', $page = 1, $
     if (!empty($search)) {
         $conditions[] = "(p.name LIKE ? OR p.description LIKE ?)";
         $searchTerm = "%$search%";
-        $params = array_merge($params, [$searchTerm, $searchTerm]); // Fixed: only 2 parameters
-        $types .= 'ss'; // Fixed: only 2 types
+        $params = array_merge($params, [$searchTerm, $searchTerm]);
+        $types .= 'ss';
     }
 
     if (!empty($category)) {
@@ -23,7 +23,7 @@ function getAllProductsWithPagination($search = '', $category = '', $page = 1, $
 
     $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-    $countQuery = "SELECT COUNT(*) as total FROM products p $whereClause";
+    $countQuery = "SELECT COUNT(*) as total FROM obat p $whereClause";
 
     if (!empty($params)) {
         $countStmt = $conn->prepare($countQuery);
@@ -35,14 +35,13 @@ function getAllProductsWithPagination($search = '', $category = '', $page = 1, $
     }
 
     $totalRows = $countResult->fetch_object()->total;
-    // if (isset($countStmt)) $countStmt->close();
 
-    $query = "SELECT p.*, c.name as category_name,
-              (SELECT COUNT(*) FROM order_items WHERE product_id = p.id) as total_orders
-              FROM products p
-              LEFT JOIN categories c ON p.category_id = c.id
+    $query = "SELECT p.*, c.nama_kategori as nama_kategori,
+              (SELECT COUNT(*) FROM barang_pesanan WHERE id_obat = p.id) as total_orders
+              FROM obat p
+              LEFT JOIN kategori c ON p.id_kategori = c.id
               $whereClause
-              ORDER BY p.name DESC
+              ORDER BY p.nama_obat DESC
               LIMIT ? OFFSET ?";
 
     if (!empty($params)) {
@@ -65,9 +64,6 @@ function getAllProductsWithPagination($search = '', $category = '', $page = 1, $
         $products[] = $row;
     }
 
-    // $stmt->close();
-    // $conn->close();
-
     return [
         'products' => $products,
         'total' => $totalRows,
@@ -81,9 +77,9 @@ function getProductById($product_id)
 {
     global $conn;
 
-    $query = "SELECT p.*, c.name as category_name
-              FROM products p
-              LEFT JOIN categories c ON p.category_id = c.id
+    $query = "SELECT p.*, c.nama_kategori as nama_kategori
+              FROM obat p
+              LEFT JOIN kategori c ON p.id_kategori = c.id
               WHERE p.id = ?";
 
     $stmt = $conn->prepare($query);
@@ -93,9 +89,6 @@ function getProductById($product_id)
 
     $product = $result->fetch_assoc();
 
-    // $stmt->close();
-    // $conn->close();
-
     return $product;
 }
 
@@ -103,15 +96,13 @@ function getAllCategories()
 {
     global $conn;
 
-    $query = "SELECT * FROM categories ORDER BY name ASC";
+    $query = "SELECT * FROM kategori ORDER BY nama_kategori ASC";
     $result = $conn->query($query);
 
     $categories = [];
     while ($row = $result->fetch_assoc()) {
         $categories[] = $row;
     }
-
-    // $conn->close();
 
     return $categories;
 }
@@ -136,7 +127,7 @@ function addProduct($data, $image_file = null)
         }
     }
 
-    $query = "INSERT INTO products (image, name, description, category_id, price, stock) 
+    $query = "INSERT INTO obat (gambar, nama_obat, deskripsi, id_kategori, harga, stok) 
               VALUES (?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($query);
@@ -152,9 +143,6 @@ function addProduct($data, $image_file = null)
 
     $success = $stmt->execute();
     $product_id = $conn->insert_id;
-
-    // $stmt->close();
-    // $conn->close();
 
     return $success ? $product_id : false;
 }
@@ -186,8 +174,8 @@ function updateProduct($product_id, $data, $image_file = null)
         }
     }
 
-    $query = "UPDATE products 
-              SET image = ?, name = ?, description = ?, category_id = ?, price = ?, stock = ?
+    $query = "UPDATE obat 
+              SET gambar = ?, nama_obat = ?, deskripsi = ?, id_kategori = ?, harga = ?, stok = ?
               WHERE id = ?";
 
     $stmt = $conn->prepare($query);
@@ -204,9 +192,6 @@ function updateProduct($product_id, $data, $image_file = null)
 
     $success = $stmt->execute();
 
-    // $stmt->close();
-    // $conn->close();
-
     return $success;
 }
 
@@ -214,16 +199,14 @@ function deleteProduct($product_id)
 {
     global $conn;
 
-    $check_query = "SELECT COUNT(*) as count FROM order_items WHERE product_id = ?";
+    $check_query = "SELECT COUNT(*) as count FROM barang_pesanan WHERE id_obat = ?";
     $check_stmt = $conn->prepare($check_query);
     $check_stmt->bind_param("i", $product_id);
     $check_stmt->execute();
     $result = $check_stmt->get_result();
     $count = $result->fetch_object()->count;
-    // $check_stmt->close();
 
     if ($count > 0) {
-        // $conn->close();
         return ['success' => false, 'message' => 'Produk tidak dapat dihapus karena sudah memiliki pesanan'];
     }
 
@@ -233,7 +216,6 @@ function deleteProduct($product_id)
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $product_id);
     $success = $stmt->execute();
-    // $stmt->close();
 
     if ($success && $product && $product['image'] !== 'default.jpg') {
         $image_path = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads/' . $product['image'];
@@ -241,8 +223,6 @@ function deleteProduct($product_id)
             unlink($image_path);
         }
     }
-
-    // $conn->close();
 
     return ['success' => $success, 'message' => $success ? 'Produk berhasil dihapus' : 'Gagal menghapus produk'];
 }

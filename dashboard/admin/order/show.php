@@ -47,10 +47,10 @@ if (!$order) {
     exit;
 }
 
-$query = "SELECT oi.*, p.name, p.price, p.image 
-          FROM order_items oi 
-          JOIN products p ON oi.product_id = p.id 
-          WHERE oi.order_id = ?";
+$query = "SELECT oi.*, p.nama_obat, p.harga, p.gambar
+          FROM barang_pesanan oi 
+          JOIN obat p ON oi.id_obat = p.id 
+          WHERE oi.id_pesanan = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $order_id);
 $stmt->execute();
@@ -61,7 +61,7 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-$query = "SELECT * FROM payments WHERE order_id = ? ORDER BY created_at DESC LIMIT 1";
+$query = "SELECT * FROM pembayaran WHERE id_pesanan = ? ORDER BY waktu_dibuat DESC LIMIT 1";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $order_id);
 $stmt->execute();
@@ -134,27 +134,27 @@ $conn->close();
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="text-muted small">Nama Penerima</label>
-                        <p class="mb-2"><strong><?= htmlspecialchars($order['recipient_name']) ?></strong></p>
+                        <p class="mb-2"><strong><?= htmlspecialchars($order['order_username']) ?></strong></p>
                     </div>
                     <div class="col-md-6">
                         <label class="text-muted small">Email Penerima</label>
-                        <p class="mb-2"><?= htmlspecialchars($order['recipient_email']) ?></p>
+                        <p class="mb-2"><?= htmlspecialchars($order['user_email']) ?></p>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="text-muted small">Nomor Telepon</label>
-                    <p class="mb-2"><?= htmlspecialchars($order['recipient_phone']) ?></p>
+                    <p class="mb-2"><?= htmlspecialchars($order['nomor_telepon_penerima']) ?></p>
                 </div>
 
                 <div class="mb-3">
                     <label class="text-muted small">Alamat Pengiriman</label>
-                    <p class="mb-2"><?= htmlspecialchars($order['street_address']) ?></p>
+                    <p class="mb-2"><?= htmlspecialchars($order['alamat']) ?></p>
                 </div>
 
                 <div class="mb-0">
                     <label class="text-muted small">Catatan</label>
-                    <p class="mb-0"><?= htmlspecialchars($order['notes'] ?: 'Tidak ada catatan') ?></p>
+                    <p class="mb-0"><?= htmlspecialchars($order['catatan'] ?: 'Tidak ada catatan') ?></p>
                 </div>
             </div>
         </div>
@@ -169,7 +169,7 @@ $conn->close();
             <div class="card-body">
                 <p class="text-muted small mb-3">
                     <i class="ti ti-calendar me-1"></i>
-                    Tanggal Pesanan: <?= formatOrderDate($order['created_at']) ?>
+                    Tanggal Pesanan: <?= formatOrderDate($order['waktu_dibuat']) ?>
                 </p>
 
                 <div class="table-responsive">
@@ -185,10 +185,10 @@ $conn->close();
                         <tbody>
                             <?php foreach ($order_items as $item): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($item['name']) ?></td>
-                                    <td class="text-center"><?= $item['quantity'] ?></td>
-                                    <td class="text-end">Rp<?= number_format($item['price'], 0, ',', '.') ?></td>
-                                    <td class="text-end">Rp<?= number_format($item['price'] * $item['quantity'], 0, ',', '.') ?></td>
+                                    <td><?= htmlspecialchars($item['nama_obat']) ?></td>
+                                    <td class="text-center"><?= $item['kuantitas'] ?></td>
+                                    <td class="text-end">Rp<?= number_format($item['harga'], 0, ',', '.') ?></td>
+                                    <td class="text-end">Rp<?= number_format($item['harga'] * $item['kuantitas'], 0, ',', '.') ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -196,7 +196,7 @@ $conn->close();
                             <tr>
                                 <td colspan="3" class="text-end"><strong>Total:</strong></td>
                                 <td class="text-end">
-                                    <strong class="text-primary">Rp<?= number_format($order['total_price'], 0, ',', '.') ?></strong>
+                                    <strong class="text-primary">Rp<?= number_format($order['harga_total'], 0, ',', '.') ?></strong>
                                 </td>
                             </tr>
                         </tfoot>
@@ -215,11 +215,11 @@ $conn->close();
                 <h5 class="mb-0">Bukti Pembayaran</h5>
             </div>
             <div class="card-body">
-                <?php if ($payment && !empty($payment['proof_of_payment'])): ?>
+                <?php if ($payment && !empty($payment['bukti_pembayaran'])): ?>
                     <div class="row">
                         <div class="col-md-6">
                             <img id="paymentProofImg"
-                                src="/apotek-alifa/assets/img/payments/<?= htmlspecialchars($payment['proof_of_payment']) ?>"
+                                src="/apotek-alifa/assets/img/payments/<?= htmlspecialchars($payment['bukti_pembayaran']) ?>"
                                 alt="Bukti Pembayaran"
                                 class="img-fluid rounded border"
                                 style="cursor: pointer; max-height: 400px; width: 100%; object-fit: contain;">
@@ -239,15 +239,15 @@ $conn->close();
                                 </p>
                                 <p class="mb-1">
                                     <strong>Tanggal Upload:</strong><br>
-                                    <?= formatOrderDate($payment['created_at']) ?>
+                                    <?= formatOrderDate($payment['waktu_dibuat']) ?>
                                 </p>
                                 <p class="mb-0">
-                                    <strong>File:</strong> <?= htmlspecialchars($payment['proof_of_payment']) ?>
+                                    <strong>File:</strong> <?= htmlspecialchars($payment['bukti_pembayaran']) ?>
                                 </p>
                             </div>
 
                             <div class="d-grid gap-2">
-                                <a href="/apotek-alifa/assets/img/payments/<?= htmlspecialchars($payment['proof_of_payment']) ?>"
+                                <a href="/apotek-alifa/assets/img/payments/<?= htmlspecialchars($payment['bukti_pembayaran']) ?>"
                                     class="btn btn-outline-primary"
                                     target="_blank">
                                     <i class="ti ti-external-link me-1"></i>
@@ -274,7 +274,7 @@ $conn->close();
             </div>
             <div class="card-body">
                 <?php if ($order['status'] === 'tertunda'): ?>
-                    <?php if ($payment && !empty($payment['proof_of_payment'])): ?>
+                    <?php if ($payment && !empty($payment['bukti_pembayaran'])): ?>
                         <p class="text-muted mb-3">Verifikasi pembayaran dan ubah status pesanan:</p>
 
                         <form method="POST" class="mb-2">

@@ -20,10 +20,10 @@ if (!$order) {
     exit;
 }
 
-$query = "SELECT oi.*, p.name, p.price, p.image 
-          FROM order_items oi 
-          JOIN products p ON oi.product_id = p.id 
-          WHERE oi.order_id = ?";
+$query = "SELECT oi.*, p.nama_obat, p.harga, p.gambar 
+          FROM barang_pesanan oi 
+          JOIN obat p ON oi.id_obat = p.id 
+          WHERE oi.id_obat = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $order_id);
 $stmt->execute();
@@ -32,7 +32,7 @@ $order_items = [];
 while ($row = $result->fetch_assoc()) {
     $order_items[] = $row;
 }
-$query = "SELECT * FROM payments WHERE order_id = ? ORDER BY created_at DESC LIMIT 1";
+$query = "SELECT * FROM pembayaran WHERE id_pesanan = ? ORDER BY waktu_dibuat DESC LIMIT 1";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $order_id);
 $stmt->execute();
@@ -57,11 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
             }
 
             if ($payment) {
-                $query = "UPDATE payments SET proof_of_payment = ?, updated_at = NOW() WHERE order_id = ?";
+                $query = "UPDATE pembayaran SET bukti_pembayaran = ?, waktu_diubah = NOW() WHERE id_pesanan = ?";
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param("si", $file_name, $order_id);
             } else {
-                $query = "INSERT INTO payments (order_id, proof_of_payment, created_at) VALUES (?, ?, NOW())";
+                $query = "INSERT INTO pembayaran (id_obat, bukti_pembayaran, waktu_dibuat) VALUES (?, ?, NOW())";
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param("is", $order_id, $file_name);
             }
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
 </nav>
 
 <h1 class="h3 mb-2 text-gray-800">Detail Pesanan #<?= str_pad($order['id'], 4, '0', STR_PAD_LEFT) ?></h1>
-<p class="mb-4">Informasi lengkap pesanan atas nama <span class="fw-semibold text-capitalize"><?= htmlspecialchars($order['recipient_name']) ?></span></p>
+<p class="mb-4">Informasi lengkap pesanan atas nama <span class="fw-semibold text-capitalize"><?= htmlspecialchars($order['nama_penerima']) ?></span></p>
 
 <?php if (isset($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -113,35 +113,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
     <div class="col-lg-6 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h3 mb-3 text-black">Rincian Pengiriman</h2>
-            <a href="?page=order.index" class="btn btn-secondary">
-                <i class="ti ti-arrow-left me-1"></i>Kembali ke Daftar Pesanan
+            <a href="?page=order_history.index" class="btn btn-secondary">
+                <i class="ti ti-arrow-left me-1"></i>Kembali ke Daftar Riwayat Pesanan
             </a>
         </div>
         <div class="p-3 p-lg-5 border bg-white">
             <div class="form-group mb-3 row">
                 <div class="col">
                     <label class="text-black">Nama Penerima</label>
-                    <input type="text" class="form-control" value="<?= htmlspecialchars($order['recipient_name']) ?>" disabled>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($order['nama_penerima']) ?>" disabled>
                 </div>
                 <div class="col">
                     <label class="text-black">Email</label>
-                    <input type="text" class="form-control" value="<?= htmlspecialchars($order['recipient_email']) ?>" disabled>
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($order['surel_penerima']) ?>" disabled>
                 </div>
             </div>
 
             <div class="form-group mb-3">
                 <label class="text-black">Alamat Penerima</label>
-                <input type="text" class="form-control" value="<?= htmlspecialchars($order['street_address']) ?>" disabled>
+                <input type="text" class="form-control" value="<?= htmlspecialchars($order['alamat']) ?>" disabled>
             </div>
 
             <div class="form-group mb-3">
                 <label class="text-black">Nomor Telepon</label>
-                <input type="text" class="form-control" value="<?= htmlspecialchars($order['recipient_phone']) ?>" disabled>
+                <input type="text" class="form-control" value="<?= htmlspecialchars($order['nomor_telepon_penerima']) ?>" disabled>
             </div>
 
             <div class="form-group">
                 <label class="text-black">Catatan</label>
-                <textarea class="form-control" rows="5" disabled><?= htmlspecialchars($order['notes'] ?: 'Tidak ada catatan') ?></textarea>
+                <textarea class="form-control" rows="5" disabled><?= htmlspecialchars($order['catatan'] ?: 'Tidak ada catatan') ?></textarea>
             </div>
         </div>
     </div>
@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
                 <div class="p-3 p-lg-5 border bg-white">
                     <p class="lead fs-6">
                         <i class="ti ti-calendar me-1"></i>
-                        <?= formatOrderDate($order['created_at']) ?>
+                        <?= formatOrderDate($order['waktu_dibuat']) ?>
                     </p>
                     <table class="table site-block-order-table mb-5">
                         <thead>
@@ -177,11 +177,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
                             <?php foreach ($order_items as $item): ?>
                                 <tr>
                                     <td>
-                                        <?= htmlspecialchars($item['name']) ?>
-                                        <strong class="mx-2">x</strong><?= $item['quantity'] ?>
+                                        <?= htmlspecialchars($item['nama_obat']) ?>
+                                        <strong class="mx-2">x</strong><?= $item['kuantitas'] ?>
                                     </td>
                                     <td class="text-end">
-                                        Rp<?= number_format($item['price'] * $item['quantity'], 0, ',', '.') ?>
+                                        Rp<?= number_format($item['harga'] * $item['kuantitas'], 0, ',', '.') ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -190,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
                             <tr>
                                 <td class="text-black font-weight-bold"><strong>Total Pesanan</strong></td>
                                 <td class="text-black font-weight-bold text-end">
-                                    <strong>Rp<?= number_format($order['total_price'], 0, ',', '.') ?></strong>
+                                    <strong>Rp<?= number_format($order['harga_total'], 0, ',', '.') ?></strong>
                                 </td>
                             </tr>
                         </tfoot>
@@ -207,10 +207,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
 
                 <div class="p-3 p-lg-5 border bg-white">
                     <div class="row">
-                        <?php if ($payment && !empty($payment['proof_of_payment'])): ?>
+                        <?php if ($payment && !empty($payment['bukti_pembayaran'])): ?>
                             <div class="col-md-6 mb-3">
                                 <img id="paymentProofImg"
-                                    src="/apotek-alifa/assets/img/payments/<?= htmlspecialchars($payment['proof_of_payment']) ?>"
+                                    src="/apotek-alifa/assets/img/payments/<?= htmlspecialchars($payment['bukti_pembayaran']) ?>"
                                     alt="Bukti Pembayaran"
                                     class="img-fluid rounded border"
                                     style="cursor: pointer; max-height: 300px; width: 100%; object-fit: cover;">
@@ -218,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <p class="text-muted mb-1">Bukti pembayaran telah diunggah pada:</p>
-                                    <p class="fw-semibold"><?= formatOrderDate($payment['created_at']) ?></p>
+                                    <p class="fw-semibold"><?= formatOrderDate($payment['waktu_dibuat']) ?></p>
 
                                     <?php if ($order['status'] === 'berhasil'): ?>
                                         <div class="alert alert-success">

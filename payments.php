@@ -1,8 +1,6 @@
 <?php
 require_once 'checkout_functions.php';
 
-requireLogin();
-
 $order_id = isset($_GET['order_id']) ? intval($_GET['order_id']) : ($_SESSION['last_order_id'] ?? 0);
 
 if ($order_id <= 0) {
@@ -47,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['buktiPembayaran'])) 
                             <div class="col-md-6">
                                 <h6 class="fw-bold">Detail Pesanan:</h6>
                                 <p class="mb-1"><strong>Order ID:</strong> #<?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?></p>
-                                <p class="mb-1"><strong>Tanggal:</strong> <?= date('d F Y, H:i', strtotime($order['created_at'])) ?></p>
-                                <p class="mb-1"><strong>Total:</strong> <span class="text-primary fw-bold">Rp<?= number_format($order['total_price'], 0, '.', ',') ?></span></p>
+                                <p class="mb-1"><strong>Tanggal:</strong> <?= date('d F Y, H:i', strtotime($order['waktu_dibuat'])) ?></p>
+                                <p class="mb-1"><strong>Total:</strong> <span class="text-primary fw-bold">Rp<?= number_format($order['harga_total'], 0, '.', ',') ?></span></p>
                                 <p class="mb-1"><strong>Status:</strong>
                                     <?php $status = getOrderStatus($order['status']); ?>
                                     <span class="badge bg-<?= $status['class'] ?>">
@@ -58,12 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['buktiPembayaran'])) 
                             </div>
                             <div class="col-md-6">
                                 <h6 class="fw-bold">Alamat Pengiriman:</h6>
-                                <p class="mb-1"><strong><?= htmlspecialchars($order['recipient_name']) ?></strong></p>
-                                <p class="mb-1"><?= htmlspecialchars($order['recipient_email']) ?></p>
-                                <p class="mb-1"><?= htmlspecialchars($order['recipient_phone']) ?></p>
-                                <p class="mb-1"><?= nl2br(htmlspecialchars($order['street_address'])) ?></p>
-                                <?php if (!empty($order['note'])): ?>
-                                    <p class="mb-1"><small class="text-muted">Catatan: <?= htmlspecialchars($order['note']) ?></small></p>
+                                <p class="mb-1"><strong><?= htmlspecialchars($order['nama_penerima']) ?></strong></p>
+                                <p class="mb-1"><?= htmlspecialchars($order['surel_penerima']) ?></p>
+                                <p class="mb-1"><?= htmlspecialchars($order['nomor_telepon_penerima']) ?></p>
+                                <p class="mb-1"><?= nl2br(htmlspecialchars($order['alamat'])) ?></p>
+                                <?php if (!empty($order['catatan'])): ?>
+                                    <p class="mb-1"><small class="text-muted">Catatan: <?= htmlspecialchars($order['catatan']) ?></small></p>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -102,13 +100,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['buktiPembayaran'])) 
                                 <div class="alert alert-warning">
                                     <small>
                                         <i class="bi bi-exclamation-triangle me-1"></i>
-                                        Transfer tepat sebesar <strong>Rp<?= number_format($order['total_price'], 0, '.', ',') ?></strong>
+                                        Transfer tepat sebesar <strong>Rp<?= number_format($order['harga_total'], 0, '.', ',') ?></strong>
                                     </small>
                                 </div>
                             </div>
                             <div class="col-md-4 text-center">
                                 <div class="bg-light p-3 rounded">
-                                    <h4 class="text-primary fw-bold mb-0">Rp<?= number_format($order['total_price'], 0, '.', ',') ?></h4>
+                                    <h4 class="text-primary fw-bold mb-0">Rp<?= number_format($order['harga_total'], 0, '.', ',') ?></h4>
                                     <small class="text-muted">Total Pembayaran</small>
                                 </div>
                             </div>

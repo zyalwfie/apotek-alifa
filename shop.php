@@ -49,14 +49,14 @@ $totalItems = $result['total'];
 							<!-- Product image-->
 							<div class="position-relative">
 								<img class="card-img-top"
-									src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($product->image) ?>"
-									alt="<?= htmlspecialchars($product->name) ?>"
+									src="/apotek-alifa/assets/img/product/uploads/<?= htmlspecialchars($product->gambar) ?>"
+									alt="<?= htmlspecialchars($product->nama_obat) ?>"
 									style="height: 200px; object-fit: cover; cursor: pointer;"
 									onclick="window.location.href='?page=show&id=<?= $product->id ?>'" />
 
 								<!-- Stock badge -->
-								<?php if (isset($product->stock)): ?>
-									<?php if ($product->stock > 0): ?>
+								<?php if (isset($product->stok)): ?>
+									<?php if ($product->stok > 0): ?>
 										<div class="badge bg-success position-absolute" style="top: 0.5rem; right: 0.5rem">
 											<i class="bi bi-check-circle me-1"></i>Tersedia
 										</div>
@@ -74,16 +74,16 @@ $totalItems = $result['total'];
 									<!-- Product name-->
 									<h5 class="fw-bolder mb-2">
 										<a href="?page=show&id=<?= $product->id ?>" class="text-decoration-none text-dark">
-											<?= htmlspecialchars($product->name) ?>
+											<?= htmlspecialchars($product->nama_obat) ?>
 										</a>
 									</h5>
 
 									<!-- Product price-->
-									<p class="text-primary fw-bold mb-2">Rp<?= number_format($product->price, 0, '.', ',') ?></p>
+									<p class="text-primary fw-bold mb-2">Rp<?= number_format($product->harga, 0, '.', ',') ?></p>
 
 									<!-- Product description -->
-									<?php if (!empty($product->description)): ?>
-										<p class="text-muted small mb-2"><?= htmlspecialchars(substr($product->description, 0, 50)) ?>...</p>
+									<?php if (!empty($product->deskripsi)): ?>
+										<p class="text-muted small mb-2"><?= htmlspecialchars(substr($product->deskripsi, 0, 50)) ?>...</p>
 									<?php endif; ?>
 
 								</div>
@@ -97,11 +97,11 @@ $totalItems = $result['total'];
 									</a>
 
 									<?php if (isLoggedIn()): ?>
-										<?php if ($user['role'] === 'user') : ?>
-											<?php if (!isset($product->stock) || $product->stock > 0): ?>
+										<?php if ($user['peran'] === 'user') : ?>
+											<?php if (!isset($product->stok) || $product->stok > 0): ?>
 												<button class="btn btn-primary btn-sm flex-fill add-to-cart-btn"
 													data-product-id="<?= $product->id ?>"
-													data-product-name="<?= htmlspecialchars($product->name) ?>">
+													data-product-name="<?= htmlspecialchars($product->nama_obat) ?>">
 													<i class="bi bi-cart-plus me-1"></i>Tambah
 												</button>
 											<?php else: ?>

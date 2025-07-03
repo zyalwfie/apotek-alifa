@@ -27,7 +27,7 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
             <div class="header-actions d-flex align-items-center gap-3">
                 <?php if (isLoggedIn()): ?>
 
-                    <?php if ($user['role'] === 'user') : ?>
+                    <?php if ($user['peran'] === 'user') : ?>
                         <!-- Cart Button (hanya tampil jika login) -->
                         <a href="?page=cart" class="btn btn-outline-primary position-relative">
                             <i class="bi bi-cart"></i>
@@ -45,13 +45,13 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
                         <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center"
                             type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle me-2"></i>
-                            <span class="d-none d-md-inline"><?= htmlspecialchars($user['username']) ?></span>
+                            <span class="d-none d-md-inline"><?= htmlspecialchars($user['nama_pengguna']) ?></span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>
                                 <h6 class="dropdown-header">
                                     <i class="bi bi-person-circle me-2"></i>
-                                    <?= htmlspecialchars($user['username']) ?>
+                                    <?= htmlspecialchars($user['nama_pengguna']) ?>
                                 </h6>
                             </li>
                             <li>
@@ -62,7 +62,7 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
                                     <i class="bi bi-person me-2"></i>Profil Saya
                                 </a>
                             </li>
-                            <?php if ($user['role'] === 'user') : ?>
+                            <?php if ($user['peran'] === 'user') : ?>
                                 <li>
                                     <a class="dropdown-item" href="?page=cart">
                                         <i class="bi bi-cart me-2"></i>Keranjang
@@ -77,7 +77,7 @@ $cartCount = isLoggedIn() ? getCartCount() : 0;
                                     </a>
                                 </li>
                             <?php endif; ?>
-                            <?php if ($user['role'] == 'admin'): ?>
+                            <?php if ($user['peran'] == 'admin'): ?>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>

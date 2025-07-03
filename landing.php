@@ -1,7 +1,7 @@
 <?php
 include('functions.php');
 
-$products = getData('select * from products limit 4');
+$products = getData('select * from obat limit 4');
 ?>
 
 <!-- Hero Section -->

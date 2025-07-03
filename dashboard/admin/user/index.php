@@ -111,21 +111,21 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         </td>
                                         <td>
                                             <img src="/apotek-alifa/assets/img/profile/<?= htmlspecialchars($user['avatar'] ?: 'user-1.svg') ?>"
-                                                alt="<?= htmlspecialchars($user['username']) ?>"
+                                                alt="<?= htmlspecialchars($user['nama_pengguna']) ?>"
                                                 width="40" height="40"
                                                 class="rounded-circle">
                                         </td>
                                         <td>
-                                            <h6 class="mb-0"><?= htmlspecialchars($user['username']) ?></h6>
-                                            <?php if ($user['full_name']): ?>
-                                                <small class="text-muted"><?= htmlspecialchars($user['full_name']) ?></small>
+                                            <h6 class="mb-0"><?= htmlspecialchars($user['nama_pengguna']) ?></h6>
+                                            <?php if ($user['nama_lengkap']): ?>
+                                                <small class="text-muted"><?= htmlspecialchars($user['nama_lengkap']) ?></small>
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <?= htmlspecialchars($user['email']) ?>
+                                            <?= htmlspecialchars($user['surel']) ?>
                                         </td>
                                         <td>
-                                            <small><?= date('d M Y', strtotime($user['created_at'])) ?></small>
+                                            <small><?= date('d M Y', strtotime($user['waktu_dibuat'])) ?></small>
                                         </td>
                                         <td class="text-end">
                                             <button class="btn btn-sm btn-outline-info view-btn"
@@ -237,11 +237,11 @@ unset($_SESSION['success'], $_SESSION['error']);
                 const user = JSON.parse(this.getAttribute('data-user'));
 
                 document.getElementById('viewAvatar').src = `/apotek-alifa/assets/img/profile/${user.avatar || 'user-1.svg'}`;
-                document.getElementById('viewUsername').textContent = user.username;
-                document.getElementById('viewFullName').textContent = user.full_name || '-';
-                document.getElementById('viewEmail').textContent = user.email;
+                document.getElementById('viewUsername').textContent = user.nama_pengguna;
+                document.getElementById('viewFullName').textContent = user.nama_lengkap || '-';
+                document.getElementById('viewEmail').textContent = user.surel;
 
-                const joinDate = new Date(user.created_at);
+                const joinDate = new Date(user.waktu_dibuat);
                 document.getElementById('viewJoinDate').textContent = joinDate.toLocaleDateString('id-ID', {
                     year: 'numeric',
                     month: 'long',
@@ -249,14 +249,30 @@ unset($_SESSION['success'], $_SESSION['error']);
                 });
 
                 fetch(`/apotek-alifa/get_user_orders.php?user_id=${user.id}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            document.getElementById('viewTotalOrders').textContent = `${data.total} pesanan`;
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(text => {
+                        try {
+                            const data = JSON.parse(text);
+                            if (data.success) {
+                                document.getElementById('viewTotalOrders').textContent = `${data.total} pesanan`;
+                            } else {
+                                console.error('API Error:', data.message);
+                                document.getElementById('viewTotalOrders').textContent = '0 pesanan';
+                            }
+                        } catch (parseError) {
+                            console.error('JSON parse error:', parseError);
+                            console.error('Response text:', text);
+                            document.getElementById('viewTotalOrders').textContent = '0 pesanan';
                         }
                     })
                     .catch(error => {
                         console.error('Error fetching user orders:', error);
+                        document.getElementById('viewTotalOrders').textContent = '0 pesanan';
                     });
 
                 const modal = new bootstrap.Modal(document.getElementById('viewUserModal'));
@@ -267,13 +283,15 @@ unset($_SESSION['success'], $_SESSION['error']);
 
     function showToast(message, type = 'info') {
         const toast = document.getElementById('toast');
-        const toastBody = toast.querySelector('.toast-body');
+        if (toast) {
+            const toastBody = toast.querySelector('.toast-body');
 
-        toastBody.textContent = message;
-        toast.className = `toast bg-${type === 'success' ? 'success' : 'danger'} text-white`;
+            toastBody.textContent = message;
+            toast.className = `toast bg-${type === 'success' ? 'success' : 'danger'} text-white`;
 
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
     }
 </script>
 

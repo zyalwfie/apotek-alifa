@@ -1,8 +1,6 @@
 <?php
-// cart_update.php
 header('Content-Type: application/json');
 
-// Debug mode
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -32,7 +30,6 @@ try {
 
     switch ($action) {
         case 'increase':
-            // Get current quantity first
             $cartItems = getCartItems($_SESSION['user_id']);
             $currentItem = null;
             foreach ($cartItems as $item) {
@@ -43,14 +40,13 @@ try {
             }
 
             if ($currentItem) {
-                $result = updateCartQuantity($cart_id, $currentItem['quantity'] + 1);
+                $result = updateCartQuantity($cart_id, $currentItem['kuantitas'] + 1);
             } else {
                 $result = ['success' => false, 'message' => 'Item tidak ditemukan!'];
             }
             break;
 
         case 'decrease':
-            // Get current quantity first
             $cartItems = getCartItems($_SESSION['user_id']);
             $currentItem = null;
             foreach ($cartItems as $item) {
@@ -61,7 +57,7 @@ try {
             }
 
             if ($currentItem) {
-                $newQuantity = $currentItem['quantity'] - 1;
+                $newQuantity = $currentItem['kuantitas'] - 1;
                 if ($newQuantity <= 0) {
                     $result = removeFromCart($cart_id);
                 } else {
@@ -82,7 +78,6 @@ try {
             break;
     }
 
-    // Tambahkan data terbaru ke response
     if ($result['success']) {
         $result['cart_count'] = getCartCount();
         $result['cart_total'] = getCartTotal($_SESSION['user_id']);

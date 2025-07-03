@@ -15,7 +15,6 @@ function getData($query, $params = [])
             $types = str_repeat('s', count($params));
             $stmt->bind_param($types, ...$params);
             $result = $stmt->execute() ? $stmt->get_result() : false;
-            // $stmt->close();
         } else {
             $result = false;
         }
@@ -31,7 +30,6 @@ function getData($query, $params = [])
         }
     }
 
-    // $conn->close();
     return !empty($data) ? $data : false;
 }
 
@@ -49,26 +47,25 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 12)
     $types = '';
 
     if (!empty($search)) {
-        $searchCondition = "WHERE name LIKE ? OR description LIKE ?";
+        $searchCondition = "WHERE nama_obat LIKE ? OR deskripsi LIKE ?";
         $searchTerm = "%$search%";
         $params = [$searchTerm, $searchTerm];
         $types = 'ss';
     }
 
-    $countQuery = "SELECT COUNT(*) as total FROM products $searchCondition";
+    $countQuery = "SELECT COUNT(*) as total FROM obat $searchCondition";
     if (!empty($params)) {
         $countStmt = $conn->prepare($countQuery);
         $countStmt->bind_param($types, ...$params);
         $countStmt->execute();
         $countResult = $countStmt->get_result();
         $totalRows = $countResult->fetch_object()->total;
-        // $countStmt->close();
     } else {
         $countResult = $conn->query($countQuery);
         $totalRows = $countResult->fetch_object()->total;
     }
 
-    $query = "SELECT * FROM products $searchCondition ORDER BY name ASC LIMIT ? OFFSET ?";
+    $query = "SELECT * FROM obat $searchCondition ORDER BY nama_obat ASC LIMIT ? OFFSET ?";
     $params[] = $limit;
     $params[] = $offset;
     $types .= 'ii';
@@ -83,12 +80,9 @@ function getProductsWithPagination($search = '', $page = 1, $limit = 12)
         while ($row = $result->fetch_object()) {
             $products[] = $row;
         }
-        // $stmt->close();
     } else {
         $products = [];
     }
-
-    // $conn->close();
 
     return [
         'products' => $products,
@@ -107,7 +101,7 @@ function getProductDetail($product_id)
         die("Koneksi gagal: " . $conn->connect_error);
     }
 
-    $query = "SELECT * FROM products WHERE id = ?";
+    $query = "SELECT * FROM obat WHERE id = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $product_id);
     $stmt->execute();
@@ -117,9 +111,6 @@ function getProductDetail($product_id)
     if ($result->num_rows > 0) {
         $product = $result->fetch_object();
     }
-
-    // $stmt->close();
-    // $conn->close();
 
     return $product;
 }
@@ -132,7 +123,7 @@ function getRelatedProducts($product_id, $limit = 4)
         die("Koneksi gagal: " . $conn->connect_error);
     }
 
-    $query = "SELECT * FROM products WHERE id != ? ORDER BY RAND() LIMIT ?";
+    $query = "SELECT * FROM obat WHERE id != ? ORDER BY RAND() LIMIT ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("ii", $product_id, $limit);
     $stmt->execute();
@@ -142,9 +133,6 @@ function getRelatedProducts($product_id, $limit = 4)
     while ($row = $result->fetch_object()) {
         $products[] = $row;
     }
-
-    // $stmt->close();
-    // $conn->close();
 
     return $products;
 }

@@ -112,10 +112,10 @@ $totalItems = $result['total'];
 
                                         <td class="px-0">
                                             <div>
-                                                <h6 class="mb-1 fw-semibold"><?= htmlspecialchars($order['recipient_name']) ?></h6>
+                                                <h6 class="mb-1 fw-semibold"><?= htmlspecialchars($order['nama_penerima']) ?></h6>
                                                 <small class="text-muted">
                                                     <i class="ti ti-mail me-1"></i>
-                                                    <?= htmlspecialchars($order['recipient_email']) ?>
+                                                    <?= htmlspecialchars($order['surel_penerima']) ?>
                                                 </small>
                                                 <br>
                                                 <small class="text-muted">
@@ -127,7 +127,7 @@ $totalItems = $result['total'];
                                         <td class="px-0">
                                             <div>
                                                 <h6 class="mb-1 fw-bold text-primary">
-                                                    Rp<?= number_format($order['total_price'], 0, '.', ',') ?>
+                                                    Rp<?= number_format($order['harga_total'], 0, '.', ',') ?>
                                                 </h6>
                                                 <small class="text-muted">
                                                     <i class="ti ti-package me-1"></i>
@@ -135,7 +135,7 @@ $totalItems = $result['total'];
                                                 </small>
                                                 <br>
                                                 <small class="text-muted">
-                                                    <?= date('d M Y', strtotime($order['created_at'])) ?>
+                                                    <?= date('d M Y', strtotime($order['waktu_dibuat'])) ?>
                                                 </small>
                                             </div>
                                         </td>
