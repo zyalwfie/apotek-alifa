@@ -83,10 +83,10 @@ if ($order_id > 0) {
                                 <div class="col-md-6 text-start">
                                     <h6 class="fw-bold">Alamat Pengiriman:</h6>
                                     <address class="mb-0">
-                                        <strong><?= htmlspecialchars($order['order_username']) ?></strong><br>
+                                        <strong><?= htmlspecialchars($order['nama_penerima']) ?></strong><br>
                                         <?= nl2br(htmlspecialchars($order['alamat'])) ?><br>
                                         <i class="bi bi-telephone me-1"></i><?= htmlspecialchars($order['nomor_telepon_penerima']) ?><br>
-                                        <i class="bi bi-envelope me-1"></i><?= htmlspecialchars($order['user_email']) ?>
+                                        <i class="bi bi-envelope me-1"></i><?= htmlspecialchars($order['surel_penerima']) ?>
                                     </address>
                                     <?php if (!empty($order['catatan'])): ?>
                                         <hr>

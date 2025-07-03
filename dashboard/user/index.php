@@ -72,7 +72,7 @@ $userRecentOrders = getUserRecentOrders($user_id);
 
     <div class="col-lg-4">
         <div class="card pt-4">
-            <img src="/apotek-alifa/assets/img/profile/user-1.svg" style="width: 81%; margin: auto;">
+            <img src="/apotek-alifa/assets/img/profile/<?= $_SESSION['avatar'] ?>" style="width: 81%; margin: auto;">
             <div class="card-body">
                 <div class="d-flex gap-2 justify-content-center align-items-center">
                     <div>

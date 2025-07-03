@@ -1,7 +1,6 @@
 <?php
 require_once '../auth_functions.php';
 
-// Redirect jika sudah login
 redirectIfLoggedIn();
 
 $error = '';
@@ -14,7 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   $password = $_POST['password'];
   $confirm_password = $_POST['confirm_password'];
 
-  // Validasi tambahan
   if (!validateFullName($full_name)) {
     $error = 'Nama lengkap hanya boleh mengandung huruf dan spasi!';
   } elseif (!validateUsername($username)) {

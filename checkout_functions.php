@@ -26,7 +26,7 @@ function createOrder($orderData)
             $total_price += $item['kuantitas'] * $item['harga_saat_ditambah'];
         }
 
-        $orderQuery = "INSERT INTO pesanan (id_pengguna, status, harga_total, alamat, order_username, user_email, nomor_telepon_penerima, catatan, waktu_dibuat, waktu_diubah) VALUES (?, 'tertunda', ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        $orderQuery = "INSERT INTO pesanan (id_pengguna, status, harga_total, alamat, nama_penerima, surel_penerima, nomor_telepon_penerima, catatan, waktu_dibuat, waktu_diubah) VALUES (?, 'tertunda', ?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
         $orderStmt = $conn->prepare($orderQuery);
         if (!$orderStmt) {
