@@ -316,12 +316,9 @@ This project is suitable for a PHP Programmer portfolio because it demonstrates:
 
 To make this repository even stronger for job applications, the next improvements should be:
 
-- Add an SQL dump or migration file for easier installation.
 - Add screenshots for landing page, shop page, cart page, checkout page, admin dashboard, product management, and order management.
-- Add seed data for admin, user, categories, products, and sample orders.
 - Add REST API endpoints for products, carts, and orders.
 - Improve folder organization using a cleaner MVC-like structure.
-- Add more consistent naming conventions between database fields and PHP variables.
 - Add server-side validation helpers for repeated validation logic.
 - Add deployment instructions for shared hosting or Linux server environments.
 - Add basic automated tests for cart, checkout, and order status workflows.

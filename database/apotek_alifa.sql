@@ -155,7 +155,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Default admin account
 -- Username: admin | Password: admin123
 INSERT INTO `pengguna` (`nama_lengkap`, `nama_pengguna`, `surel`, `sandi`, `avatar`, `peran`, `waktu_dibuat`) VALUES
-('Administrator', 'admin', 'admin@apotek-alifa.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user-1.png', 'admin', NOW());
+('Administrator', 'admin', 'admin@apotek-alifa.com', '$2y$12$gSw4r8H5wi0pV0KvmcJXD.9/mMShzALfC1Ct2d3k.7x8bEHUS5rLu', 'user-1.png', 'admin', NOW());
 
 -- Sample categories
 INSERT INTO `kategori` (`nama_kategori`) VALUES

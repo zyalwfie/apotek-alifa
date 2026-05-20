@@ -101,7 +101,7 @@ function getUserOrderHistoryWithPagination($user_id, $search = '', $page = 1, $l
     $countStmt->close();
 
 
-    $query = "SELECT o.id, o.id_pengguna, o.id_pengguna, o.status_saat_disetujui,
+    $query = "SELECT o.id, o.id_pengguna, o.status_saat_disetujui,
                      o.harga_total, o.alamat,
                      o.nama_penerima, o.surel_penerima, o.nomor_telepon_penerima,
                      o.catatan, o.waktu_dibuat_pesanan, o.waktu_disetujui,
@@ -355,12 +355,19 @@ function updateOrderStatus($order_id, $status, $admin_id)
     $conn->begin_transaction();
 
     try {
+        $currentStatusQuery = "SELECT status FROM pesanan WHERE id = ?";
+        $currentStatusStmt = $conn->prepare($currentStatusQuery);
+        $currentStatusStmt->bind_param("i", $order_id);
+        $currentStatusStmt->execute();
+        $currentStatus = $currentStatusStmt->get_result()->fetch_assoc()['status'] ?? null;
+        $currentStatusStmt->close();
+
         $query = "UPDATE pesanan SET status = ?, waktu_diubah = NOW() WHERE id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("si", $status, $order_id);
         $stmt->execute();
 
-        if ($status === 'gagal') {
+        if ($status === 'gagal' && $currentStatus !== 'gagal') {
             $rollbackQuery = "UPDATE obat o
                               JOIN barang_pesanan bp ON o.id = bp.id_obat
                               SET o.stok = o.stok + bp.kuantitas
@@ -513,7 +520,7 @@ function getRecentOrdersForDashboard($limit = 5)
     return $orders;
 }
 
-function getAdminDashboardStats($user_id)
+function getUserOrderStats($user_id)
 {
     global $conn;
 
