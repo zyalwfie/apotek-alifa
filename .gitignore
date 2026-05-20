@@ -1,0 +1,4 @@
+.env
+assets/img/product/uploads/*
+!assets/img/product/uploads/.gitkeep
+!assets/img/product/uploads/default.png

@@ -212,7 +212,7 @@ function deleteProduct($product_id)
 
     $product = getProductById($product_id);
 
-    $query = "DELETE FROM products WHERE id = ?";
+    $query = "DELETE FROM obat WHERE id = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $product_id);
     $success = $stmt->execute();

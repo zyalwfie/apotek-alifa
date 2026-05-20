@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['proof_of_payment']))
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param("si", $file_name, $order_id);
             } else {
-                $query = "INSERT INTO pembayaran (id_obat, bukti_pembayaran, waktu_dibuat) VALUES (?, ?, NOW())";
+                $query = "INSERT INTO pembayaran (id_pesanan, bukti_pembayaran, waktu_dibuat) VALUES (?, ?, NOW())";
                 $stmt = $conn->prepare($query);
                 $stmt->bind_param("is", $order_id, $file_name);
             }

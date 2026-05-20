@@ -506,14 +506,14 @@ function getAdminDashboardStats($user_id)
 {
     global $conn;
 
-    $query = "SELECT 
-                SUM(CASE WHEN status = 'berhasil' THEN total_price ELSE 0 END) as total_spending,
+    $query = "SELECT
+                SUM(CASE WHEN status = 'berhasil' THEN harga_total ELSE 0 END) as total_spending,
                 COUNT(CASE WHEN status = 'tertunda' THEN 1 END) as pending_orders,
                 COUNT(CASE WHEN status = 'berhasil' THEN 1 END) as successful_orders,
                 COUNT(CASE WHEN status = 'gagal' THEN 1 END) as failed_orders,
                 COUNT(*) as total_orders
-              FROM orders 
-              WHERE user_id = ?";
+              FROM pesanan
+              WHERE id_pengguna = ?";
 
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $user_id);

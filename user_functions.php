@@ -103,7 +103,7 @@ function addUser($userData)
             return ['success' => false, 'message' => 'Username sudah digunakan'];
         }
 
-        $checkQuery = "SELECT id FROM users WHERE email = ?";
+        $checkQuery = "SELECT id FROM pengguna WHERE surel = ?";
         $checkStmt = $conn->prepare($checkQuery);
         $checkStmt->bind_param("s", $userData['email']);
         $checkStmt->execute();
@@ -220,7 +220,7 @@ function deleteUser($userId)
     global $conn;
 
     try {
-        $checkQuery = "SELECT COUNT(*) as count FROM pesanan WHERE user_id = ?";
+        $checkQuery = "SELECT COUNT(*) as count FROM pesanan WHERE id_pengguna = ?";
         $checkStmt = $conn->prepare($checkQuery);
         $checkStmt->bind_param("i", $userId);
         $checkStmt->execute();
@@ -236,7 +236,7 @@ function deleteUser($userId)
         $deleteCartStmt->bind_param("i", $userId);
         $deleteCartStmt->execute();
 
-        $query = "DELETE FROM users WHERE id = ?";
+        $query = "DELETE FROM pengguna WHERE id = ?";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("i", $userId);
 
