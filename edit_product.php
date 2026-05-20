@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['product_id'])) {
         exit();
     }
 
-    $stmt->bind_param("siisssi", $name, $category_id, $price, $stock, $description, $new_image, $product_id);
+    $stmt->bind_param("siiissi", $name, $category_id, $price, $stock, $description, $new_image, $product_id);
 
     if ($stmt->execute()) {
         $_SESSION['message'] = 'Produk berhasil diperbarui!';

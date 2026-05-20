@@ -25,11 +25,11 @@ try {
         session_start();
     }
 
-    if (!isset($_SESSION['user_id']) || !isset($_SESSION['user_role'])) {
+    if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
         throw new Exception('User not logged in');
     }
 
-    if ($_SESSION['user_role'] !== 'admin') {
+    if ($_SESSION['role'] !== 'admin') {
         throw new Exception('Unauthorized access - Admin required');
     }
 

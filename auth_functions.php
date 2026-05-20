@@ -71,7 +71,7 @@ function register($full_name, $username, $email, $password, $confirm_password)
     if ($checkResult->num_rows > 0) {
         $existing = $checkResult->fetch_assoc();
 
-        if ($existing['username'] === $username) {
+        if ($existing['nama_pengguna'] === $username) {
             return ['success' => false, 'message' => 'Username sudah digunakan!'];
         } else {
             return ['success' => false, 'message' => 'Email sudah digunakan!'];

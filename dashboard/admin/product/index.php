@@ -222,7 +222,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                 <h5 class="modal-title">Tambah Produk Baru</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="addProductForm" method="POST" enctype="multipart/form-data" action="/apotek-alifa/add_products.php">
+            <form id="addProductForm" method="POST" enctype="multipart/form-data" action="/apotek-alifa/add_product.php">
                 <input type="hidden" name="action" value="add">
                 <div class="modal-body">
                     <div class="row g-3">
@@ -235,7 +235,7 @@ unset($_SESSION['success'], $_SESSION['error']);
                             <select class="form-select" name="category_id" required>
                                 <option value="">Pilih Kategori</option>
                                 <?php foreach ($categories as $category): ?>
-                                    <option value="<?= $category['id'] ?>"><?= htmlspecialchars($category['name']) ?></option>
+                                    <option value="<?= $category['id'] ?>"><?= htmlspecialchars($category['nama_kategori']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -287,61 +287,6 @@ unset($_SESSION['success'], $_SESSION['error']);
                     <button type="submit" class="btn btn-danger">Ya, Hapus sekarang</button>
                 </form>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Product Modal -->
-<div class="modal fade" id="addProductModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Tambah Produk Baru</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="addProductForm" method="POST" enctype="multipart/form-data" action="/apotek-alifa/add_products.php">
-                <input type="hidden" name="action" value="add">
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Nama Produk <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="name" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Kategori <span class="text-danger">*</span></label>
-                            <select class="form-select" name="category_id" required>
-                                <option value="">Pilih Kategori</option>
-                                <?php foreach ($categories as $category): ?>
-                                    <option value="<?= $category['id'] ?>"><?= htmlspecialchars($category['nama_kategori']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Harga <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="price" min="0" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Stok <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" name="stock" min="0" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Deskripsi</label>
-                            <textarea class="form-control" name="description" rows="3"></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Gambar Produk</label>
-                            <input type="file" class="form-control" name="image" accept="image/*" onchange="previewImage(event, 'addPreview')">
-                            <div id="addPreview" class="mt-2"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ti ti-device-floppy me-1"></i>Simpan Produk
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

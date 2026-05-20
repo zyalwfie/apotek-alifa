@@ -12,7 +12,7 @@ if (isset($_POST['product_id'])) {
         $result = $stmt->get_result();
         if ($result->num_rows > 0) {
             $product = $result->fetch_assoc();
-            $old_image = $product['image'];
+            $old_image = $product['gambar'];
         } else {
             $_SESSION['message'] = 'Produk tidak ditemukan.';
             $_SESSION['message_type'] = 'danger';

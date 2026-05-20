@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['a
             VALUES (?, ?, ?, ?, ?, ?)";
 
     if ($stmt = $conn->prepare($sql)) {
-        $stmt->bind_param("sssiii", $name, $category_id, $price, $stock, $description, $image);
+        $stmt->bind_param("siiiss", $name, $category_id, $price, $stock, $description, $image);
 
         if ($stmt->execute()) {
             $_SESSION['message'] = 'Produk berhasil ditambahkan!';

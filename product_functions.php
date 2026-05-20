@@ -9,14 +9,14 @@ function getAllProductsWithPagination($search = '', $category = '', $page = 1, $
     $types = '';
 
     if (!empty($search)) {
-        $conditions[] = "(p.name LIKE ? OR p.description LIKE ?)";
+        $conditions[] = "(p.nama_obat LIKE ? OR p.deskripsi LIKE ?)";
         $searchTerm = "%$search%";
         $params = array_merge($params, [$searchTerm, $searchTerm]);
         $types .= 'ss';
     }
 
     if (!empty($category)) {
-        $conditions[] = "p.category_id = ?";
+        $conditions[] = "p.id_kategori = ?";
         $params[] = $category;
         $types .= 'i';
     }
@@ -154,7 +154,7 @@ function updateProduct($product_id, $data, $image_file = null)
     $current = getProductById($product_id);
     if (!$current) return false;
 
-    $image_name = $current['image'];
+    $image_name = $current['gambar'];
 
     if ($image_file && $image_file['error'] === 0) {
         $upload_dir = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads/';
@@ -217,8 +217,8 @@ function deleteProduct($product_id)
     $stmt->bind_param("i", $product_id);
     $success = $stmt->execute();
 
-    if ($success && $product && $product['image'] !== 'default.jpg') {
-        $image_path = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads/' . $product['image'];
+    if ($success && $product && $product['gambar'] !== 'default.jpg') {
+        $image_path = $_SERVER['DOCUMENT_ROOT'] . '/apotek-alifa/assets/img/product/uploads/' . $product['gambar'];
         if (file_exists($image_path)) {
             unlink($image_path);
         }

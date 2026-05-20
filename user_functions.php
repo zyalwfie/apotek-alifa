@@ -181,7 +181,7 @@ function updateUser($userId, $userData)
             }
 
             $hashedPassword = password_hash($userData['password'], PASSWORD_DEFAULT);
-            $query = "UPDATE pengguna SET nama_pengguna = ?, surel = ?, password = ?, nama_lengkap = ?, peran = ? WHERE id = ?";
+            $query = "UPDATE pengguna SET nama_pengguna = ?, surel = ?, sandi = ?, nama_lengkap = ?, peran = ? WHERE id = ?";
             $stmt = $conn->prepare($query);
             $stmt->bind_param(
                 "sssssi",
