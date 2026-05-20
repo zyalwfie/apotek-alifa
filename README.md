@@ -136,7 +136,7 @@ This project was built as a portfolio project to demonstrate practical PHP web d
 
 ## What This Project Demonstrates
 
-This project is useful for PHP Programmer and Backend Web Developer portfolio screening because it shows hands-on experience with real application flows, not just static pages wearing a fake mustache and calling themselves "systems."
+This project is useful for PHP Programmer and Backend Web Developer portfolio screening because it shows hands-on experience with real application flows. This project demonstrates practical application flows beyond static page implementation.
 
 ### Native PHP Application Development
 
@@ -195,6 +195,8 @@ apotek-alifa/
 │   └── register.php
 ├── dashboard/
 │   └── admin/user dashboard pages
+├── database/
+│   └── apotek_alifa.sql
 ├── layouts/
 │   └── shared layout pages
 ├── auth_functions.php
@@ -263,17 +265,20 @@ DB_PASS=
 DB_NAME=apotek_alifa
 ```
 
-4. Create the database.
+4. Import the database schema and seed data.
 
-```sql
-CREATE DATABASE apotek_alifa;
+```bash
+mysql -u root -p < database/apotek_alifa.sql
 ```
 
-5. Prepare the required database tables.
+This will create the `apotek_alifa` database, all required tables, and seed data including a default admin account and sample products.
 
-This project uses the tables listed in the **Database Tables Used** section. Import your SQL dump or create the required schema before running the application.
+Default admin credentials:
 
-Recommended improvement for portfolio readiness: add a `database/apotek_alifa.sql` file so recruiters or reviewers can run the project faster instead of performing archaeological work like it is 2009.
+```
+Username : admin
+Password : admin123
+```
 
 6. Place the project inside your local web server directory.
 

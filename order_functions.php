@@ -360,6 +360,17 @@ function updateOrderStatus($order_id, $status, $admin_id)
         $stmt->bind_param("si", $status, $order_id);
         $stmt->execute();
 
+        if ($status === 'gagal') {
+            $rollbackQuery = "UPDATE obat o
+                              JOIN barang_pesanan bp ON o.id = bp.id_obat
+                              SET o.stok = o.stok + bp.kuantitas
+                              WHERE bp.id_pesanan = ?";
+            $rollbackStmt = $conn->prepare($rollbackQuery);
+            $rollbackStmt->bind_param("i", $order_id);
+            $rollbackStmt->execute();
+            $rollbackStmt->close();
+        }
+
         $order_details_query = "SELECT * FROM pesanan WHERE id = ?";
         $order_stmt = $conn->prepare($order_details_query);
         $order_stmt->bind_param("i", $order_id);
@@ -560,20 +571,25 @@ function getUserRecentOrders($user_id, $limit = 5)
     return $orders;
 }
 
-function getUserDashboardStats()
+function getUserDashboardStats($user_id)
 {
     global $conn;
 
-    $query = "SELECT 
+    $query = "SELECT
                 SUM(CASE WHEN status = 'berhasil' THEN harga_total ELSE 0 END) as total_spending,
                 COUNT(CASE WHEN status = 'tertunda' THEN 1 END) as pending_orders,
                 COUNT(CASE WHEN status = 'berhasil' THEN 1 END) as successful_orders,
                 COUNT(CASE WHEN status = 'gagal' THEN 1 END) as failed_orders,
                 COUNT(*) as total_orders
-              FROM pesanan";
+              FROM pesanan
+              WHERE id_pengguna = ?";
 
-    $result = $conn->query($query);
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
     $stats = $result->fetch_assoc();
+    $stmt->close();
 
 
     return [
